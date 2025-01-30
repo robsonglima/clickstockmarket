@@ -1,0 +1,12 @@
+autopep8
+
+#Libs
+pandas>=2.0.0
+requests
+numpy
+yfinance
+matplotlib
+seaborn
+
+# App
+streamlit
