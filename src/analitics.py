@@ -61,7 +61,7 @@ def preencher_industry(df):
     df['Industry'] = industries
     return df
 
-def consultar_precos_intradiarios_yf(tickers, intervalo="15m", periodo="1d"):
+def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
     """Fetches intraday price data for a list of tickers."""
     precos = []
     for ticker in tickers:

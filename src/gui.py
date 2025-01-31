@@ -2,34 +2,35 @@ import streamlit as st
 from app import load_data, run_app, display_top_15_table, display_intraday_prices_table
 from analitics import consultar_precos_intradiarios_yf
  
-data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
-st.sidebar.title("Navigation")
+
+st.sidebar.title("Menu")
 page = st.sidebar.radio(
-    "Go to", ["Home", "App", "Tabela"]
+    "Ir para", ["Principal", "Gráfico", "Tabela"]
 )
 
-if page == "Home":
-    st.title("Stock Market Analysis")
+if page == "Principal":
+    st.title("Análise de Ações")
     st.markdown(
         """
-            Welcome to Stock Analysis!
+            Bem-vindo ao Análise de Ações!
 
-            Discover the correlations between stocks and identify patterns that may indicate good investment opportunities. Our platform allows you to analyze market behavior over different time periods, helping you understand how assets move together and what signs can anticipate trends.
+            Descubra as correlações entre ações e identifique padrões que podem indicar boas oportunidades de investimento. Nossa plataforma permite que você analise o comportamento do mercado em diferentes períodos de tempo, ajudando você a entender como os ativos se movem juntos e quais sinais podem antecipar tendências.
 
-            Use the menu to explore the data and improve your strategies.
+            Use o menu para explorar os dados e melhorar suas estratégias.
 
         """
     )
-    if st.button("Reload Home"):
+    if st.button("Recarregar Principal"):
         st.rerun()
 
-elif page == "App":    
-    st.title("Ticker Analysis")
-    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()    
-    run_app(data_frame_top_15_industry, data_frame_precos_intradiarios)
+elif page == "Gráfico":    
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
+    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+    st.title("Análise do Ticker")
+    run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
 
 elif page == "Tabela":    
-    st.title("Tabelas de Dados")
+    st.title("Tabelas de Dados")    
     interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
     period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
     interval = st.selectbox("Select Interval", interval_options, index=8)
@@ -38,7 +39,7 @@ elif page == "Tabela":
     # Button to update data from yfinance
     if st.button("Update Data"):
         try:
-            with st.spinner("Updating..."):
+            with st.spinner("Atualizando..."):
                 tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
                 updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
@@ -48,12 +49,13 @@ elif page == "Tabela":
     st.success("Updated successfully!")
     # Display tables
     if data_frame_top_15_industry is not None:
-        st.subheader("Top 15 Listed Companies")
+        st.subheader("Top 15 Empresas Listadas")
         display_top_15_table(data_frame_top_15_industry)
 
     if data_frame_precos_intradiarios is not None:
-        st.subheader("Prices in the selected timeframe")
+        st.subheader("Preços no período selecionado")
         display_intraday_prices_table(data_frame_precos_intradiarios)
+data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
 
 
 

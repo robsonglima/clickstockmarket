@@ -3,6 +3,8 @@ import pandas as pd
 import os
 import plotly.express as px
 import logging
+from analitics import consultar_precos_intradiarios_yf
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -14,7 +16,7 @@ def load_data():
     csv_precos_intradiarios_path = "src/precos_intradiarios_top_15.csv"
 
     if not os.path.exists(csv_top_15_industry_path) or not os.path.exists(csv_precos_intradiarios_path):
-        st.warning("CSV files not found. Please run the analytics.py script first.")
+        st.warning("Arquivos CSV não encontrados. Por favor, execute o script analytics.py primeiro.")
         logging.warning("CSV files missing.")
         return None, None
     
@@ -34,11 +36,11 @@ def display_top_15_table(df):
         st.dataframe(df)
         logging.info("Top 15 companies table displayed successfully.")
     else:
-        st.error("DataFrame is empty")
-        logging.error("DataFrame is empty")
+        st.error("DataFrame vazio")
+        logging.error("DataFrame vazio")
 
 def display_intraday_prices_table(df):
-    """Displays the intraday prices table."""
+        """Displays the intraday prices table."""
     logging.info("Displaying intraday prices table...")
     if df is not None:
         logging.info(f"DataFrame content for display_intraday_prices_table():\n{df.head()}")
@@ -46,22 +48,39 @@ def display_intraday_prices_table(df):
         st.dataframe(df)
         logging.info("Intraday prices table displayed successfully.")
     else:
-        st.error("Dataframe is empty")
-        logging.error("Dataframe is empty")
+        st.error("Dataframe vazio")
+        logging.error("Dataframe vazio")
 
 # Function to run the app
 # Main app structure
-def run_app(df_top_15_industry, df_precos_intradiarios):
+def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
     """Main function to run the Streamlit app."""
-    st.title("Stock Market Analysis")
+    st.title("Análise do Mercado de Ações")
     logging.info("Starting Streamlit app...")
 
     if df_top_15_industry is not None and df_precos_intradiarios is not None:
         logging.info("DataFrames loaded successfully. Displaying content.")
-        st.subheader("Industry Distribution of Top 15 Companies")
-        st.subheader("Ticker Price Time Series")
+        
+        if st.button("Update Data"):
+            try:
+                # Update data from yfinance
+                logging.info("Updating data from yfinance...")
+                new_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15,"15min","1d")
+                if new_df_precos_intradiarios is not None:
+                    df_precos_intradiarios = new_df_precos_intradiarios
+                    st.success("Dados atualizados com sucesso!")
+                    logging.info("Data updated successfully.")
+                else:
+                    st.error("Falha ao atualizar os dados.")
+                    logging.error("Falha ao atualizar os dados.")
+            except Exception as e:
+                st.error(f"Ocorreu um erro ao atualizar os dados: {e}")
+                logging.error(f"Ocorreu um erro ao atualizar os dados: {e}")
+                
+        st.subheader("Distribuição por Setor das 15 Maiores Empresas")
+        st.subheader("Série Temporal do Preço do Ticker")
         unique_tickers = df_precos_intradiarios['symbol'].unique()
-        selected_ticker = st.selectbox("Select Ticker", sorted(unique_tickers))
+        selected_ticker = st.selectbox("Selecione o Ticker", sorted(unique_tickers))
         if selected_ticker:
             # Filter data for the selected ticker
             ticker_data = df_precos_intradiarios[df_precos_intradiarios['symbol'] == selected_ticker].copy()
@@ -77,3 +96,4 @@ def run_app(df_top_15_industry, df_precos_intradiarios):
 
     else:
         logging.error("One or both DataFrames are None. Content will not be displayed.")
+
