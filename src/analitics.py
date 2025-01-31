@@ -54,6 +54,10 @@ def preencher_industry(df):
             logging.error(f"Error fetching industry for {ticker}: {e}")
             industries.append("Erro")
 
+    
+
+
+
     df['Industry'] = industries
     return df
 
@@ -67,8 +71,12 @@ def consultar_precos_intradiarios_yf(tickers, intervalo="15m", periodo="1d"):
             dados = dados.reset_index()
             dados.columns = ["datetime", "open", "high", "low", "close", "volume"]
             dados["symbol"] = ticker
+
             dados = dados[["datetime", "symbol", "volume", "open", "high", "low", "close"]]
             precos.append(dados)
+            
+
+
             logging.info(f"Data fetched for {ticker}")
         except Exception as e:
             logging.error(f"Error fetching data for {ticker}: {e}")
@@ -95,10 +103,20 @@ if __name__ == "__main__":
             logging.error(f"Error saving {OUTPUT_FILE_INDUSTRY}: {e}")
 
         # Get intraday prices
-        tickers_top_15 = df_top_15_atualizado['TckrSymb'].tolist()
+        tickers_top_15 = df_top_15_atualizado['TckrSymb'].tolist()        
         df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15)
+        
+        #Add industry information on df_precos_intradiarios
+        industry_mapping = df_top_15_atualizado.set_index('TckrSymb')['Industry'].to_dict()
+        df_precos_intradiarios['Industry'] = df_precos_intradiarios['symbol'].map(industry_mapping)
+        
+        #Add industry information on df_precos
+        df_precos = df_precos_intradiarios
 
-        print(df_precos_intradiarios.head())
+
+        print("df_precos_intradiarios")
+        print(df_precos_intradiarios.head())        
+
         #Save intraday data
         try:
             df_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)

@@ -1,8 +1,8 @@
 import streamlit as st
-from app import load_data, run_app
+from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_from_yfinance  
  
 
-# --- Sidebar navigation ---
+# --- Sidebar navigation --- 
 st.sidebar.title("Menu")
 page = st.sidebar.radio(
     "Go to", ["Home", "Tabela", "App"]
@@ -11,7 +11,7 @@ page = st.sidebar.radio(
 # --- Page Content ---
 if page == "Home":
     st.title("Stock Analysis")  # Changed title
-    st.write(
+    st.markdown(
         """
             Bem-vindo ao Stock Analysis!
 
@@ -21,16 +21,39 @@ if page == "Home":
 
         """
     )
-    if st.button("Home"):
+    if st.button("Reload Home"):
         st.write("Home!")
 
-elif page == "Table":
+elif page == "Tabela":
+    st.title("Data Tables")
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
-   
 
+    # User input for interval and period
+    interval_options = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
+    period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+    interval = st.selectbox("Select Interval", interval_options, index=7)  # Default to "1h"
+    period = st.selectbox("Select Period", period_options, index=5)  # Default to "1y"
 
+    # Button to update data from yfinance
+    if st.button("Update Data from yfinance"):
+        try:
+            with st.spinner("Updating data..."):
+                 updated_df_top_15_industry, updated_df_precos_intradiarios = update_data_from_yfinance(interval, period)
+                 data_frame_top_15_industry = updated_df_top_15_industry
+                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
+            st.success("Data updated successfully!")
+
+        except Exception as e:
+            st.error(f"An error occurred while updating the data: {e}")
+    
+    # Display tables
+    if data_frame_top_15_industry is not None:
+        st.subheader("Top 15 Companies")
+        display_top_15_table(data_frame_top_15_industry)
+    if data_frame_precos_intradiarios is not None:
+        st.subheader("Intraday Prices")
+        display_intraday_prices_table(data_frame_precos_intradiarios)
 elif page == "App":
-    # Call to run the content of app.py
     run_app()
 
 
