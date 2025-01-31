@@ -65,15 +65,21 @@ def run_app(df_top_15_industry, df_precos_intradiarios):
         if selected_ticker:
             # Filter data for the selected ticker
             ticker_data = df_precos_intradiarios[df_precos_intradiarios['symbol'] == selected_ticker].copy()
-            ticker_data.sort_values(by='datetime', inplace=True)  # Sort by datetime
-            ticker_data['price_change'] = ticker_data['close'].diff()
-            last_price_change = ticker_data['price_change'].iloc[-1] if not ticker_data['price_change'].empty else 0
+            ticker_data.sort_values(by='datetime', inplace=True)
+            
+            # Calculate price change from first to last
+            first_price = ticker_data['close'].iloc[0]
+            last_price = ticker_data['close'].iloc[-1]
+            price_change = last_price - first_price
 
-            if last_price_change >= 0:
-                line_color = 'green'
+            # Determine line color based on price change
+            if price_change >= 0:
+                area_color = 'green'
             else:
-                line_color = 'red'
-            fig = px.line(ticker_data, x='datetime', y='close', title=f'Time Series for {selected_ticker}', color_discrete_sequence=[line_color])
-            st.plotly_chart(fig)           
+                area_color = 'red'
+
+            fig = px.area(ticker_data, x='datetime', y='close', title=f'Time Series for {selected_ticker}', color_discrete_sequence=[area_color])
+            st.plotly_chart(fig)
+
     else:
         logging.error("One or both DataFrames are None. Content will not be displayed.")
