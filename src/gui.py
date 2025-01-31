@@ -1,6 +1,7 @@
 import streamlit as st
 from app import load_data, run_app, display_top_15_table, display_intraday_prices_table
 from analitics import consultar_precos_intradiarios_yf
+import pandas as pd
 
 st.sidebar.title("Menu")
 page = st.sidebar.radio(
@@ -18,13 +19,14 @@ if page == "Principal":
             Use o menu para explorar os dados e melhorar suas estratégias.
 
         """
-    )
+        )
     if st.button("Recarregar Principal"):
         st.rerun()
 
 elif page == "Gráfico":    
     st.title("Análise do Gráfico")    
-    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
+    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
+
     tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()    
     run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
 
@@ -36,7 +38,7 @@ elif page == "Tabela":
     interval = st.selectbox("Selecione Intervalo", interval_options, index=8)
     period = st.selectbox("Selecione Periodo", period_options, index=5)
     
-    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
+    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
     tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
     # Button to update data from yfinance
     if st.button("Atualizar"):
@@ -49,11 +51,11 @@ elif page == "Tabela":
          except Exception as e:
              st.error(f"Ops, houve um erro ao atualizar: {e}")
     # Display tables
-    
-    if data_frame_top_15_industry is not None:
+
+    if isinstance(data_frame_top_15_industry, pd.DataFrame):
         st.subheader("Top 15 Empresas Listadas")
         display_top_15_table(data_frame_top_15_industry)
 
-    if data_frame_precos_intradiarios is not None:
+    if isinstance(data_frame_precos_intradiarios,pd.DataFrame):
         st.subheader("Preços no período selecionado")
         display_intraday_prices_table(data_frame_precos_intradiarios)
