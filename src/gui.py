@@ -50,6 +50,8 @@ elif page == "Table":
                 tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
                 updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
+        except:
+            pass
             st.success("Data updated successfully!")
     
     # Filter the data based on the selected period and interval
