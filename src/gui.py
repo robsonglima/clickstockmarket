@@ -57,6 +57,6 @@ elif page == "Tabela":
         st.subheader("Intraday Prices")
         display_intraday_prices_table(data_frame_precos_intradiarios)
 elif page == "App":
-    run_app()
+    run_app(data_frame_top_15_industry, data_frame_precos_intradiarios)
 
 

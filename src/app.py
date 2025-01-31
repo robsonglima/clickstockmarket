@@ -51,14 +51,12 @@ def display_intraday_prices_table(df):
 
 # Function to run the app
 # Main app structure
-def run_app():
+def run_app(df_top_15_industry, df_precos_intradiarios):
     """Main function to run the Streamlit app."""
     st.title("Stock Market Analysis")
     logging.info("Starting Streamlit app...")
 
     # Load the DataFrames
-    df_top_15_industry, df_precos_intradiarios = load_data()
-    
     if df_top_15_industry is not None and df_precos_intradiarios is not None:
         logging.info("DataFrames loaded successfully. Displaying content.")
         # Industry Distribution Chart
