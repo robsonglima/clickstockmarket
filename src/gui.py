@@ -47,7 +47,11 @@ def display_cards(stats: List[float] | None) -> None:
         change_type_class = 'bg-emerald-100 text-emerald-800 ring-emerald-600/10 dark:bg-emerald-400/10 dark:text-emerald-500 dark:ring-emerald-400/20' if item['changeType'] == 'positive' else 'bg-red-100 text-red-800 ring-red-600/10 dark:bg-red-400/10 dark:text-red-500 dark:ring-red-400/20' if item['changeType'] == 'negative' else 'bg-gray-100 text-gray-800 ring-gray-600/10 dark:bg-gray-400/10 dark:text-gray-500 dark:ring-gray-400/20'
         card_html += f'<div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"><div class="flex items-center justify-between"><dt class="truncate text-sm font-medium text-gray-500">{item["name"]}</dt><dd class="ml-2 flex items-baseline"><span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {change_type_class}">{item["change"]}</span></dd></div><div class="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6"><dd class="text-3xl font-semibold text-gray-900">{item["stat"]}</dd></div></div>'
     card_html += '</div>'
-    st.markdown(card_html, unsafe_allow_html=True)
+    st.markdown(card_html, unsafe_allow_html=True)  
+
+def load_data_no_tickers():
+    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data()
+    return data_frame_top_15_industry, data_frame_precos_intradiarios
     
 page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
 
@@ -69,7 +73,7 @@ if page == "Principal":
         st.rerun()
 elif page == "Comparativo":
     st.title("Comparativo")
-    data_frame_top_15_industry, _, _ = load_data()
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
     
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
@@ -79,7 +83,6 @@ elif page == "Comparativo":
 
     start_date = st.date_input("Data Inicial", date(2023, 1, 1))
     end_date = st.date_input("Data Final", date.today())
-    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
 
     company_data_list = []
     if selected_tickers:
@@ -110,10 +113,10 @@ elif page == "Comparativo":
         
 elif page == "Gráfico":
     st.title("Análise do Gráfico")
-    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
-    stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
-    display_cards(stats)    
-
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
+    if isinstance(data_frame_top_15_industry, pd.DataFrame):
+        stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios, data_frame_top_15_industry['TckrSymb'].tolist())
+        display_cards(stats)
 
 elif page == "Tabela":
 
