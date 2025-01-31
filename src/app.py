@@ -6,6 +6,7 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Function to Load the DataFrames
 def load_data():
     """Loads the DataFrames from CSV files."""
     logging.info("Attempting to load data...")
@@ -22,6 +23,7 @@ def load_data():
     logging.info("Data loaded successfully.")
     return df_top_15_industry, df_precos_intradiarios
 
+# Functions to display tables
 # Function to display the top 15 companies table
 def display_top_15_table(df):
     """Displays the table of top 15 companies."""
@@ -47,6 +49,7 @@ def display_intraday_prices_table(df):
         st.error("Dataframe is empty")
         logging.error("Dataframe is empty")
 
+# Function to run the app
 # Main app structure
 def run_app():
     """Main function to run the Streamlit app."""
@@ -58,9 +61,6 @@ def run_app():
     
     if df_top_15_industry is not None and df_precos_intradiarios is not None:
         logging.info("DataFrames loaded successfully. Displaying content.")
-        # Display data frames
-        display_top_15_table(df_top_15_industry)
-        display_intraday_prices_table(df_precos_intradiarios)
         # Industry Distribution Chart
         st.subheader("Industry Distribution of Top 15 Companies")
 
@@ -74,4 +74,4 @@ def run_app():
             fig = px.line(ticker_data, x='datetime', y='close', title=f'Time Series for {selected_ticker}')
             st.plotly_chart(fig)
     else:
-            logging.error("One or both DataFrames are None. Content will not be displayed.")
+        logging.error("One or both DataFrames are None. Content will not be displayed.")

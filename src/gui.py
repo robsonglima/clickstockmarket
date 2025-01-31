@@ -1,5 +1,5 @@
 import streamlit as st
-from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_from_yfinance  
+from app import load_data, run_app, display_top_15_table, display_intraday_prices_table
  
 
 # --- Sidebar navigation --- 
