@@ -59,9 +59,6 @@ def industry_distribution(df, title="Industry Distribution of Top 15 Companies")
     st.pyplot(fig)
     logging.info("Industry distribution chart generated successfully with Seaborn.")
     else:
-        st.error("Dataframe is empty")
-        logging.error("Dataframe is empty")
-
 # Function to create the price time series line chart for a given ticker
 def ticker_price_time_series(df, ticker_symbol):
     """Creates a time series plot for a given ticker symbol."""
