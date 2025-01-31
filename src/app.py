@@ -23,7 +23,7 @@ def load_data():
     df_top_15_industry = pd.read_csv(csv_top_15_industry_path, sep=";")
     df_precos_intradiarios = pd.read_csv(csv_precos_intradiarios_path)
     logging.info("Data loaded successfully.")
-        return df_top_15_industry, df_precos_intradiarios
+    return df_top_15_industry, df_precos_intradiarios
 
 
 # Function to create the industry distribution bar chart

@@ -1,6 +1,7 @@
 import streamlit as st
 from table_app import display_table
-from app import run_app
+from app import run_app, load_data
+
 
 # --- Sidebar navigation ---
 st.sidebar.title("Menu")
@@ -25,9 +26,12 @@ if page == "Home":
         st.write("Home button clicked!")
 
 elif page == "Table":
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
     # Call to display the table
-    display_table()
+    display_table(data_frame_top_15_industry)
 
 elif page == "App":
     # Call to run the content of app.py
     run_app()
+
+
