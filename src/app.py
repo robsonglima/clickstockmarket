@@ -58,7 +58,7 @@ def industry_distribution(df, title="Industry Distribution of Top 15 Companies")
     plt.tight_layout(pad=3)  # Add padding around the plot
     st.pyplot(fig)
     logging.info("Industry distribution chart generated successfully with Seaborn.")
-    else:
+    
 # Function to create the price time series line chart for a given ticker
 def ticker_price_time_series(df, ticker_symbol):
     """Creates a time series plot for a given ticker symbol."""
@@ -71,7 +71,7 @@ def ticker_price_time_series(df, ticker_symbol):
         else:
             logging.info(f"DataFrame content for ticker_price_time_series() - {ticker_symbol}:\n{ticker_data.head()}")
             logging.info(f"DataFrame types for ticker_price_time_series() - {ticker_symbol}:\n{ticker_data.dtypes}")
-            
+
             # Convert 'datetime' to datetime objects
             ticker_data['datetime'] = pd.to_datetime(ticker_data['datetime'])
 
@@ -86,7 +86,7 @@ def ticker_price_time_series(df, ticker_symbol):
             ax.set_title(f'Closing Price Time Series for {ticker_symbol}', fontsize=16, pad=20)
             ax.set_xlabel('Date', fontsize=12, labelpad=15)
             ax.set_ylabel('Closing Price', fontsize=12, labelpad=15)
-            
+
             # Improve time axis display
             ax.tick_params(axis='x', rotation=45)
             ax.xaxis.set_major_locator(plt.MaxNLocator(10))  # Show maximum 10 ticks
@@ -147,7 +147,7 @@ def run_app():
         # Ticker Price Time Series Chart
         st.subheader("Ticker Price Time Series")
         unique_tickers = df_precos_intradiarios['symbol'].unique()    
-        selected_ticker = st.selectbox("Select Ticker", unique_tickers)    
+        selected_ticker = st.selectbox("Select Ticker", unique_tickers)
         ticker_price_time_series(df_precos_intradiarios, selected_ticker)    
     else:
         logging.error("One or both DataFrames are None. Content will not be displayed.")
