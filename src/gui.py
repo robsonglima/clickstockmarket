@@ -1,7 +1,6 @@
 import streamlit as st
-from app import run_app
-from app import load_data
-from tremor_app import TremorGraphs
+from app import load_data, run_app
+from tremor_app import Example as TremorGraphs
 
 
 # --- Sidebar navigation ---
