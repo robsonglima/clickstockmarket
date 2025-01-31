@@ -1,6 +1,5 @@
 import streamlit as st
 from app import load_data, run_app, display_top_15_table, display_intraday_prices_table
-from analitics import consultar_precos_intradiarios_yf, preencher_industry
  
 
 st.sidebar.title("Menu")
@@ -23,14 +22,17 @@ if page == "Principal":
     if st.button("Recarregar Principal"):
         st.rerun()
 
-elif page == "Gráfico":
-    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
-    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+elif page == "Gráfico":    
     st.title("Análise do Gráfico")
+    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()   
+    
     run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
 
-elif page == "Tabela":    
+elif page == "Tabela":
+    st.title("Tabelas de Dados")
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
+    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
     st.title("Tabelas de Dados")    
     interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
     period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
@@ -39,13 +41,13 @@ elif page == "Tabela":
     tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
     # Button to update data from yfinance
     if st.button("Update Data"):        
-        try:
+         try:
             with st.spinner("Atualizando..."):
                 updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
                 st.success("Updated successfully!")
-        except Exception as e:
-            st.error(f"An error occurred while updating the data: {e}")
+         except Exception as e:
+             st.error(f"An error occurred while updating the data: {e}")
     # Display tables
     
     if data_frame_top_15_industry is not None:
