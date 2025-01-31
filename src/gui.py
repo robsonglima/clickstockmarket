@@ -1,6 +1,6 @@
 import streamlit as st
 from table_app import display_table
-from app import main as app_main
+from app import run_app
 
 # --- Sidebar navigation ---
 st.sidebar.title("Menu")
@@ -30,4 +30,4 @@ elif page == "Table":
 
 elif page == "App":
     # Call to run the content of app.py
-    app_main()
+    run_app()
