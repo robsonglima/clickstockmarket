@@ -1,7 +1,8 @@
 import streamlit as st
-from table_app import display_table
 from app import run_app
 from app import load_data
+from tremor_app import TremorGraphs
+
 
 # --- Sidebar navigation ---
 st.sidebar.title("Menu")
@@ -29,7 +30,8 @@ elif page == "Table":
 
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
     # Call to display the table
-    display_table(data_frame_top_15_industry)
+    TremorGraphs(data_frame_top_15_industry, data_frame_precos_intradiarios)
+
 
 elif page == "App":
     # Call to run the content of app.py
