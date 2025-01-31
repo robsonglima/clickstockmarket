@@ -25,6 +25,15 @@ def load_data():
     logging.info("Data loaded successfully.")
     return df_top_15_industry, df_precos_intradiarios
 
+def update_data_frames(tickers_top_15):
+    """Updates the DataFrames by loading data and consulting intraday prices."""
+    logging.info("Attempting to update data frames...")
+    df_top_15_industry, _ = load_data()
+    df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, "1d", "1mo")
+    logging.info("Data frames updated successfully.")
+    return df_top_15_industry, df_precos_intradiarios
+
+
 # def para montar tabelas
 # def para montar tabela - top 15 companies table
 def display_top_15_table(df):
@@ -62,20 +71,14 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
         logging.info("DataFrames loaded successfully. Displaying content.")
         
         if st.button("Atualizar"):
-            try:
-                # atualziar dados do yfinance
-                logging.info("Updating data from yfinance...")
-                new_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15,"15min","1d")
-                if new_df_precos_intradiarios is not None:
-                    df_precos_intradiarios = new_df_precos_intradiarios
-                    st.success("Dados atualizados com sucesso!")
-                    logging.info("Data updated successfully.")
-                else:
-                    st.error("Falha ao atualizar os dados.")
-                    logging.error("Falha ao atualizar os dados.")
-            except Exception as e:
-                st.error(f"Ocorreu um erro ao atualizar os dados: {e}")
-                logging.error(f"Ocorreu um erro ao atualizar os dados: {e}")
+            df_top_15_industry, df_precos_intradiarios = update_data_frames(tickers_top_15)
+            if df_precos_intradiarios is not None and df_top_15_industry is not None:
+                st.success("Dados atualizados com sucesso!")
+                logging.info("Data updated successfully.")
+            else:
+                st.error("Falha ao atualizar os dados.")
+                logging.error("Falha ao atualizar os dados.")
+            
                 
         # local para outro graph - em teste -- st.subheader("Distribuição por Setor das 15 Maiores Empresas")
         st.subheader("Série Temporal do Preço do Ticker")
