@@ -22,23 +22,11 @@ if page == "Home":
         """
     )
     if st.button("Reload Home"):
-        st.write("Home!")
-
+        st.rerun()
 
 elif page == "App":
     st.title("App")
-    # User input for interval and period
-    interval_options = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
-    period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
-    interval = st.selectbox("Select Interval", interval_options, index=7)  # Default to "1h"
-    period = st.selectbox("Select Period", period_options, index=5)  # Default to "1y"
-    
-        
-    # Filter the data based on the selected period and interval
-    df_filtered = data_frame_precos_intradiarios.copy()
-    if period != "max":
-        df_filtered = df_filtered.last(period)
-    run_app(data_frame_top_15_industry, df_filtered, interval, period)
+    run_app(data_frame_top_15_industry, data_frame_precos_intradiarios)
 
 elif page == "Table":
     st.title("Data Tables")
@@ -47,11 +35,15 @@ elif page == "Table":
         try:
             with st.spinner("Updating data..."):
                 # Get intraday prices
+                interval_options = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
+                period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+                interval = st.selectbox("Select Interval", interval_options, index=7)  # Default to "1h"
+                period = st.selectbox("Select Period", period_options, index=5)  # Default to "1y"
                 tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
                 updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
-        except:
-            pass
+        except Exception as e:
+             st.error(f"An error occurred while updating the data: {e}")
             st.success("Data updated successfully!")
     
     # Filter the data based on the selected period and interval

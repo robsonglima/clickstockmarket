@@ -51,18 +51,14 @@ def display_intraday_prices_table(df):
 
 # Function to run the app
 # Main app structure
-def run_app(df_top_15_industry, df_precos_intradiarios, period, interval):
+def run_app(df_top_15_industry, df_precos_intradiarios):
     """Main function to run the Streamlit app."""
     st.title("Stock Market Analysis")
     logging.info("Starting Streamlit app...")
 
-    # Load the DataFrames
     if df_top_15_industry is not None and df_precos_intradiarios is not None:
         logging.info("DataFrames loaded successfully. Displaying content.")
-        # Industry Distribution Chart
         st.subheader("Industry Distribution of Top 15 Companies")
-
-        # Ticker Price Time Series Chart
         st.subheader("Ticker Price Time Series")
         unique_tickers = df_precos_intradiarios['symbol'].unique()
         selected_ticker = st.selectbox("Select Ticker", sorted(unique_tickers))
