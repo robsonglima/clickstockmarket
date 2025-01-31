@@ -1,15 +1,15 @@
 import streamlit as st
-from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_frames
+from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_frames, show_comparative_graph,show_company_info
 
 from analitics import get_company_data
 import pandas as pd
 from datetime import date
- 
+
+
 st.sidebar.title("Menu")
 page = st.sidebar.radio(
     "Ir para", ["Principal", "Dashboard", "Gráfico", "Tabela"]
 )
-
 if page == "Principal":
     st.title("Análise de Ações")
     st.markdown(
@@ -24,23 +24,27 @@ if page == "Principal":
         )
     if st.button("Recarregar Principal"):
         st.rerun()    
-
 elif page == "Dashboard":
     st.title("Dashboard")
-    tickers_list = ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "NVDA", "BRK-B", "JPM", "JNJ", "V", "WMT", "MA", "PG", "UNH", "HD"]
-    selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
+    data_frame_top_15_industry, _, _ = load_data()
+    
+    if isinstance(data_frame_top_15_industry, pd.DataFrame):
+        tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
+        selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
+    else:
+        selected_tickers = []
 
-
-    start_date = st.date_input("Start date", date(2023, 1, 1))
-    end_date = st.date_input("End date", date.today())
+    start_date = st.date_input("Data Inicial", date(2023, 1, 1))
+    end_date = st.date_input("Data Final", date.today())
 
     company_data_list = []
     if selected_tickers:
+        show_comparative_graph(selected_tickers, start_date, end_date)
         for ticker in selected_tickers:
             company_data = get_company_data(ticker, start_date, end_date)
             company_data_list.append(company_data)
 
-        for ticker, company_data in zip(selected_tickers, company_data_list):
+        for ticker, company_data in zip(selected_tickers,company_data_list):
             show_company_info(company_data, ticker)
 
 elif page == "Gráfico":

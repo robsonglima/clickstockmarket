@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import yfinance as yf
 import plotly.express as px
 import logging
 from analitics import consultar_precos_intradiarios_yf
@@ -190,3 +191,47 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
     else:
         logging.error("One or both DataFrames are None. Content will not be displayed.")
 
+def show_comparative_graph(selected_tickers, start_date, end_date):
+    """
+    Displays a comparative line graph of the closing prices of selected tickers.
+
+    Args:
+        selected_tickers (list): A list of ticker symbols.
+        start_date (date): The start date for historical prices.
+        end_date (date): The end date for historical prices.
+    """
+    if not selected_tickers:
+        return
+
+    # Exclude BOVA11.SA from comparative analysis
+    tickers_for_comparison = [t for t in selected_tickers if t != "BOVA11.SA"]
+
+    if not tickers_for_comparison:
+        if "BOVA11.SA" in selected_tickers:
+             # Fetch data for BOVA11.SA
+            company_data = get_company_data("BOVA11.SA", start_date, end_date)
+            # Display information for BOVA11.SA
+            show_company_info(company_data, "BOVA11.SA")
+        return
+    
+    if len(tickers_for_comparison) > 1:
+        # Fetch historical data for each ticker
+        all_data = {}
+        for ticker in tickers_for_comparison:
+            try:
+                data = yf.download(ticker, start=start_date, end=end_date)
+                if not data.empty:
+                    data['pct_change'] = data['Close'].pct_change() * 100
+                    data['normalized'] = (100 + data['pct_change'].cumsum())
+                    all_data[ticker] = data['normalized']
+            except Exception as e:
+                st.error(f"Error fetching data for {ticker}: {e}")
+        
+        # Create comparative graph
+        if all_data:
+            comparison_df = pd.DataFrame(all_data)
+            fig = px.line(comparison_df, title='Comparação de Preços Normalizados')
+            fig.update_layout(xaxis_title="Data", yaxis_title="Preço Normalizado (%)")
+            st.plotly_chart(fig)
+    elif len(tickers_for_comparison) == 1:
+            st.write("Selecione dois ou mais tickers para comparar")
