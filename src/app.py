@@ -40,7 +40,7 @@ def display_top_15_table(df):
         logging.error("DataFrame vazio")
 
 def display_intraday_prices_table(df):
-        """Displays the intraday prices table."""
+    """Displays the intraday prices table."""
     logging.info("Displaying intraday prices table...")
     if df is not None:
         logging.info(f"DataFrame content for display_intraday_prices_table():\n{df.head()}")
