@@ -1,7 +1,6 @@
 import streamlit as st
 from app import load_data, run_app
-from tremor_app import Example as TremorGraphs
-
+ 
 
 # --- Sidebar navigation ---
 st.sidebar.title("Menu")
@@ -26,10 +25,8 @@ if page == "Home":
         st.write("Home!")
 
 elif page == "Table":
-
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
-    # Call to display the table
-    TremorGraphs(data_frame_top_15_industry, data_frame_precos_intradiarios)
+   
 
 
 elif page == "App":

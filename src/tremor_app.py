@@ -1,9 +1,6 @@
-# 'use client';
-
 import pandas as pd
 from datetime import datetime
 import streamlit as st
-from tremor_react import AreaChart, Card, Tab, TabGroup, TabList, TabPanel, TabPanels, Metric, Text, Bold, BarChart, Title, LineChart
 
 def get_data_for_line_chart(df_precos_intradiarios):
     """
@@ -72,4 +69,5 @@ def Example(df_top_15_industry, df_precos_intradiarios):
             unsafe_allow_html=True,
         )
         st.tremor_chart(LineChart(data=data_line_chart, index="datetime", categories=["Average Close Price","Total Volume"], valueFormatter=value_formatter, yAxisWidth=45, className="h-96"))
+
 

@@ -3,7 +3,6 @@ import pandas as pd
 import os
 import plotly.express as px
 import logging
-from tremor_app import TremorGraphs
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -64,7 +63,6 @@ def run_app():
         display_intraday_prices_table(df_precos_intradiarios)
         # Industry Distribution Chart
         st.subheader("Industry Distribution of Top 15 Companies")
-        TremorGraphs(df_top_15_industry, df_precos_intradiarios, "df_precos_intradiarios")
 
         # Ticker Price Time Series Chart
         st.subheader("Ticker Price Time Series")
