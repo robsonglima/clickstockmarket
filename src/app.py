@@ -65,20 +65,14 @@ def run_app(df_top_15_industry, df_precos_intradiarios):
         if selected_ticker:
             # Filter data for the selected ticker
             ticker_data = df_precos_intradiarios[df_precos_intradiarios['symbol'] == selected_ticker].copy()
-            ticker_data.sort_values(by='datetime', inplace=True)
-            
-            # Calculate price change from first to last
+            # Calculate line color based on first and last price
             first_price = ticker_data['close'].iloc[0]
             last_price = ticker_data['close'].iloc[-1]
-            price_change = last_price - first_price
-
-            # Determine line color based on price change
-            if price_change >= 0:
-                area_color = 'green'
+            if last_price >= first_price:
+                line_color = 'green'
             else:
-                area_color = 'red'
-
-            fig = px.area(ticker_data, x='datetime', y='close', title=f'Time Series for {selected_ticker}', color_discrete_sequence=[area_color])
+                line_color = 'red'
+            fig = px.line(ticker_data, x='datetime', y='close', title=f'Time Series for {selected_ticker}', color_discrete_sequence=[line_color])
             st.plotly_chart(fig)
 
     else:

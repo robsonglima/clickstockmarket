@@ -6,59 +6,53 @@ data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go to", ["Home", "App", "Tabela"]
-)  # Updated menu options and page names
+)
 
-# --- Page Content ---
-if page == "Home":    
-    st.title("Stock Market Analysis")  # Changed title
+if page == "Home":
+    st.title("Stock Market Analysis")
     st.markdown(
         """
-            Bem-vindo ao Stock Analysis!
+            Welcome to Stock Analysis!
 
-            Descubra as correlações entre ações e identifique padrões que podem indicar boas oportunidades de investimento. Nossa plataforma permite analisar o comportamento do mercado em diferentes períodos de tempo, ajudando você a entender como os ativos se movem juntos e quais sinais podem antecipar tendências.
+            Discover the correlations between stocks and identify patterns that may indicate good investment opportunities. Our platform allows you to analyze market behavior over different time periods, helping you understand how assets move together and what signs can anticipate trends.
 
-            Use o menu para explorar os dados e aprimorar suas estratégias
+            Use the menu to explore the data and improve your strategies.
 
         """
     )
     if st.button("Reload Home"):
         st.rerun()
 
-elif page == "App":
-    st.title("App")
-    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
+elif page == "App":    
+    st.title("Ticker Analysis")
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()    
     run_app(data_frame_top_15_industry, data_frame_precos_intradiarios)
 
-elif page == "Tabela":
+elif page == "Tabela":    
     st.title("Tabelas de Dados")
     interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
     period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
-    interval = st.selectbox("Selecione o Intervalo", interval_options, index=7)  # Default to "1h"
-    period = st.selectbox("Selecione o Periodo", period_options, index=5)  # Default to "1y"
+    interval = st.selectbox("Select Interval", interval_options, index=8)
+    period = st.selectbox("Select Period", period_options, index=5)
 
     # Button to update data from yfinance
-    if st.button("Atualizar Dados"):
+    if st.button("Update Data"):
         try:
-            with st.spinner("Atualizando..."):
-               
-                interval_options = ["2min", "4min", "10min", "30min", "60min", "120min", "180min", "2h", "2d", "10d", "2wk", "2mo", "6mo"]
-                period_options = ["2d", "10d", "2mo", "6mo", "12mo", "2y", "4y", "10y", "20y", "ytd", "max"]
+            with st.spinner("Updating..."):
                 tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
                 updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
         except Exception as e:
-            st.error(f"Houve um erro na atualização dos dados: {e}")
-        
-    
-    st.success("Atualizado com sucesso!")
-    
+            st.error(f"An error occurred while updating the data: {e}")
+
+    st.success("Updated successfully!")
     # Display tables
     if data_frame_top_15_industry is not None:
-        st.subheader("Top 15 Listadas")
+        st.subheader("Top 15 Listed Companies")
         display_top_15_table(data_frame_top_15_industry)
 
     if data_frame_precos_intradiarios is not None:
-        st.subheader("Preços no intervalo de tempo selecionado")
+        st.subheader("Prices in the selected timeframe")
         display_intraday_prices_table(data_frame_precos_intradiarios)
 
 
