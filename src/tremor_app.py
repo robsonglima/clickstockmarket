@@ -61,7 +61,7 @@ def Example(df_top_15_industry, df_precos_intradiarios):
             """,
             unsafe_allow_html=True,
         )
-        st.tremor_chart(BarChart(data=data_bar_chart, index="Industry", categories=["Number of Companies"], valueFormatter=value_formatter, yAxisWidth=45, className="h-96"))
+        st.tremor_chart(BarChart(data=data_bar_chart, index="Industry", categories=["Number of Companies"], valueFormatter=value_formatter, yAxisWidth=45, className="h-96"))       
         st.write(
             f"""
                 <div style="display:flex; justify-content: center; align-items: center; margin: auto; height: auto">
@@ -72,6 +72,4 @@ def Example(df_top_15_industry, df_precos_intradiarios):
             unsafe_allow_html=True,
         )
         st.tremor_chart(LineChart(data=data_line_chart, index="datetime", categories=["Average Close Price","Total Volume"], valueFormatter=value_formatter, yAxisWidth=45, className="h-96"))
-        
-    return 
-}
+

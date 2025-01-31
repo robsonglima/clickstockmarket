@@ -1,5 +1,5 @@
 import streamlit as st
-from app import load_data, run_app  # Changed import statement
+from app import load_data, run_app
 from tremor_app import Example as TremorGraphs
 
 

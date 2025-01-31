@@ -57,10 +57,7 @@ def run_app():
     # Load the DataFrames
     df_top_15_industry, df_precos_intradiarios = load_data()
     
-    if df_top_15_industry is None or df_precos_intradiarios is None:
-            logging.error("One or both DataFrames are None. Content will not be displayed.")
-            return
-    else:
+    if df_top_15_industry is not None and df_precos_intradiarios is not None:
         logging.info("DataFrames loaded successfully. Displaying content.")
         # Display data frames
         display_top_15_table(df_top_15_industry)
@@ -78,5 +75,5 @@ def run_app():
             ticker_data = df_precos_intradiarios[df_precos_intradiarios['symbol'] == selected_ticker]
             fig = px.line(ticker_data, x='datetime', y='close', title=f'Time Series for {selected_ticker}')
             st.plotly_chart(fig)
-    elif df_top_15_industry is None or df_precos_intradiarios is None:  
-        logging.error("One or both DataFrames are None. Content will not be displayed.")
+    else:
+            logging.error("One or both DataFrames are None. Content will not be displayed.")
