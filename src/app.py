@@ -193,13 +193,13 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
 
 def show_comparative_graph(selected_tickers, start_date, end_date):
     """
-    Displays a comparative line graph of the closing prices of selected tickers.
+    Exibe um gráfico de linha comparativo dos preços de fechamento dos tickers selecionados.
 
     Args:
-        selected_tickers (list): A list of ticker symbols.
-        start_date (date): The start date for historical prices.
-        end_date (date): The end date for historical prices.
-    """
+        selected_tickers (list): Uma lista de símbolos de ticker.
+        start_date (date): A data de início para os preços históricos.
+        end_date (date): A data de término para os preços históricos.
+    """    
     if not selected_tickers:
         return
     # Adiciona o disclaime dos precos normalizados
@@ -238,3 +238,54 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
             st.plotly_chart(fig)
     elif len(tickers_for_comparison) == 1:
             st.write("Selecione dois ou mais tickers para comparar")
+
+def analyze_trend_initiation(selected_tickers, start_date, end_date):
+    """
+    Analisa o início de tendências de alta e baixa para os tickers selecionados.
+
+    Args:
+        selected_tickers (list): Uma lista de símbolos de ticker.
+        start_date (date): A data de início para a busca de dados.
+        end_date (date): A data de término para a busca de dados.
+
+    Returns:
+        tuple: Uma tupla contendo dois dicionários:
+               - downward_trends (dict): Ticker e hora para a primeira tendência de baixa.
+               - upward_trends (dict): Ticker e hora para a primeira tendência de alta.
+    """
+    downward_trends = {}
+    upward_trends = {}
+
+    for ticker in selected_tickers: 
+        try:
+            # Fetch minute-by-minute data
+            data = yf.download(ticker, start=start_date, end=end_date, interval="1m")
+
+            if data.empty:
+                st.warning(f"No data found for {ticker} in the given time frame.")
+                continue
+
+            # Find the first downward trend
+            first_downward_trend_time = None
+            for i in range(1, len(data)):
+                if data['Close'].iloc[i] < data['Close'].iloc[i - 1]:
+                    first_downward_trend_time = data.index[i]
+                    break
+            
+            if first_downward_trend_time is not None:
+                downward_trends[ticker] = first_downward_trend_time
+
+            # Find the first upward trend
+            first_upward_trend_time = None
+            for i in range(1, len(data)):
+                if data['Close'].iloc[i] > data['Close'].iloc[i - 1]:
+                    first_upward_trend_time = data.index[i]
+                    break
+
+            if first_upward_trend_time is not None:
+                upward_trends[ticker] = first_upward_trend_time
+
+        except Exception as e:
+            st.error(f"Error analyzing trend for {ticker}: {e}")
+
+    return downward_trends, upward_trends
