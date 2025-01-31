@@ -1,6 +1,6 @@
 import streamlit as st
-from app import load_data, run_app, display_top_15_table, display_intraday_prices_table
-from analitics import consultar_precos_intradiarios_yf
+from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_frames
+
 import pandas as pd
 
 st.sidebar.title("Menu")
@@ -26,9 +26,9 @@ if page == "Principal":
 elif page == "Gráfico":    
     st.title("Análise do Gráfico")    
     data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
-
-    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()    
-    run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
+    if isinstance(data_frame_top_15_industry, pd.DataFrame):
+        tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()    
+        run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
 
 elif page == "Tabela":
     st.title("Tabelas de Dados")
@@ -38,18 +38,17 @@ elif page == "Tabela":
     interval = st.selectbox("Selecione Intervalo", interval_options, index=8)
     period = st.selectbox("Selecione Periodo", period_options, index=5)
     
-    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
-    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
-    # Button to update data from yfinance
-    if st.button("Atualizar"):
-         try:
-            
-            with st.spinner("Atualizando..."):
-                updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
-                data_frame_precos_intradiarios = updated_df_precos_intradiarios
-                st.success("Atualizado com sucesso!")
-         except Exception as e:
-             st.error(f"Ops, houve um erro ao atualizar: {e}")
+    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()    
+
+    if isinstance(data_frame_top_15_industry, pd.DataFrame):
+        tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+        if st.button("Atualizar"):
+            try:
+                with st.spinner("Atualizando..."):
+                    data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
+                    st.success("Atualizado com sucesso!")
+            except Exception as e:
+                st.error(f"Ops, houve um erro ao atualizar: {e}")
     # Display tables
 
     if isinstance(data_frame_top_15_industry, pd.DataFrame):

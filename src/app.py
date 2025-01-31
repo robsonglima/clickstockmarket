@@ -42,24 +42,24 @@ def load_data():
     return df_top_15_industry, df_precos_intradiarios, tickers_top_15
 
 
-def update_data_frames(tickers):
+def update_data_frames(tickers, interval, period):
     """
     Updates the DataFrames by consulting intraday prices for the given tickers.
 
     Args:
         tickers (list): A list of stock tickers to update.
-    
+        interval (string): the interval of time to consult
+        period (string): the period of time to consult
     Returns:
         tuple: A tuple containing the df_top_15_industry DataFrame, and the 
                updated df_precos_intradiarios DataFrame.
     """
     logging.info("Attempting to update data frames...")
-    df_top_15_industry, _, _ = load_data()
     if not tickers:
         logging.error("Could not retrieve tickers.")
-        return None, None
+        return None
     
-    df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers, "1d", "1mo")
+    df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers, interval, period)
     
 
     # Save the updated df_precos_intradiarios to the CSV file
@@ -67,7 +67,7 @@ def update_data_frames(tickers):
     
     logging.info("Data frames updated successfully.")
     return df_top_15_industry, df_precos_intradiarios
-
+    
 
 # def para montar tabelas
 # def para montar tabela - top 15 companies table
@@ -111,7 +111,7 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
         
         
         if st.button("Atualizar"):
-            df_top_15_industry, df_precos_intradiarios = update_data_frames(tickers_list)
+            _, df_precos_intradiarios = update_data_frames(tickers_list, "1d", "1mo")
             
             if  df_precos_intradiarios is not None and df_top_15_industry is not None:
                 st.success("Dados atualizados com sucesso!")
