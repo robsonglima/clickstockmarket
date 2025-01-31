@@ -5,7 +5,7 @@ from analitics import consultar_precos_intradiarios_yf
 data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
-    "Go to", ["Home", "App", "Table"]
+    "Go to", ["Home", "App", "Tabela"]
 )  # Updated menu options and page names
 
 # --- Page Content ---
@@ -28,35 +28,35 @@ elif page == "App":
     st.title("App")
     run_app(data_frame_top_15_industry, data_frame_precos_intradiarios)
 
-elif page == "Table":
+elif page == "Tabela":
     st.title("Data Tables")
-    interval_options = ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
+    interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
     period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
-    interval = st.selectbox("Select Interval", interval_options, index=7)  # Default to "1h"
-    period = st.selectbox("Select Period", period_options, index=5)  # Default to "1y"
+    interval = st.selectbox("Selecione o Intervalo", interval_options, index=7)  # Default to "1h"
+    period = st.selectbox("Selecione o Periodo", period_options, index=5)  # Default to "1y"
 
     # Button to update data from yfinance
-    if st.button("Update Data"):
+    if st.button("Atualizar Dados"):
         try:
-            with st.spinner("Updating data..."):
+            with st.spinner("Atualizando..."):
                
                 # Get intraday prices
                 tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
                 updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
         except Exception as e:
-            st.error(f"An error occurred while updating the data: {e}")
+            st.error(f"Houve um erro na atualização dos dados: {e}")
         
     
-    st.success("Data updated successfully!")
+    st.success("Atualizado com sucesso!")
     
     # Display tables
     if data_frame_top_15_industry is not None:
-        st.subheader("Top 15 Companies")
+        st.subheader("Top 15 Listadas")
         display_top_15_table(data_frame_top_15_industry)
 
     if data_frame_precos_intradiarios is not None:
-        st.subheader("Intraday Prices")
+        st.subheader("Preços no intervalo de tempo selecionado")
         display_intraday_prices_table(data_frame_precos_intradiarios)
 
 
