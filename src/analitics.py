@@ -1,13 +1,12 @@
 
-import pandas as pd
-import yfinance as yf
-import io
-import requests
 import logging
 import os
-
-# Configure logging
+import io
+import requests
+import pandas as pd
+import yfinance as yf
 from datetime import date
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -42,6 +41,7 @@ def download_and_load_csv(url, delimiter, encoding, header, bad_lines_action):
         logging.error(f"Error parsing CSV: {e}")
         return None
 
+
 def preencher_industry(df):
     """Fetches and adds 'Industry' information to the DataFrame."""
     industries = []
@@ -57,8 +57,6 @@ def preencher_industry(df):
             industries.append("Erro")
 
     
-
-
 
     df['Industry'] = industries
     return df
@@ -84,8 +82,6 @@ def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
             logging.error(f"Error fetching data for {ticker}: {e}")
     return pd.concat(precos, ignore_index=True) if precos else pd.DataFrame()
 
-
-
 def get_company_data(ticker, start_date, end_date):
     """
     Fetches company information and historical prices for a given ticker.
@@ -106,6 +102,39 @@ def get_company_data(ticker, start_date, end_date):
     except Exception as e:
         logging.error(f"Error fetching data for {ticker}: {e}")
         return {"profile": "N/A", "market": "N/A", "volume": "N/A", "history": pd.DataFrame()}
+
+def analyze_trend_initiation(tickers, start_date, end_date):
+    """
+    Analyses the initiation of upward and downward trends for given tickers.
+
+    Args:
+        tickers (list): List of stock tickers.
+        start_date (date): Start date for the analysis.
+        end_date (date): End date for the analysis.
+
+    Returns:
+        tuple: A tuple containing two dictionaries, one for downward trends and one for upward trends.
+    """
+    downward_trends = {}
+    upward_trends = {}
+    
+    for ticker in tickers:
+        company = yf.Ticker(ticker)
+        history = company.history(start=start_date, end=end_date)
+        
+        if len(history) >= 2:
+            
+            if history['Close'].iloc[0] > history['Close'].iloc[1]:
+                
+                downward_trends[ticker] = history.index[1].strftime('%Y-%m-%d')
+            
+            elif history['Close'].iloc[0] < history['Close'].iloc[1]:
+                
+                upward_trends[ticker] = history.index[1].strftime('%Y-%m-%d')
+            else:
+                continue
+    
+    return downward_trends, upward_trends
 
 if __name__ == "__main__":
     # Main execution block
