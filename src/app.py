@@ -30,6 +30,10 @@ def update_data_frames(tickers_top_15):
     logging.info("Attempting to update data frames...")
     df_top_15_industry, _ = load_data()
     df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, "1d", "1mo")
+    
+    # Save the updated df_precos_intradiarios to the CSV file
+    df_precos_intradiarios.to_csv("src/precos_intradiarios_top_15.csv", index=False)
+    
     logging.info("Data frames updated successfully.")
     return df_top_15_industry, df_precos_intradiarios
 
