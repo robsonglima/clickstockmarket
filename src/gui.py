@@ -1,6 +1,6 @@
 import streamlit as st
 from app import load_data, run_app, display_top_15_table, display_intraday_prices_table
-from analitics import consultar_precos_intradiarios_yf
+from analitics import consultar_precos_intradiarios_yf, preencher_industry
  
 
 st.sidebar.title("Menu")
@@ -23,10 +23,10 @@ if page == "Principal":
     if st.button("Recarregar Principal"):
         st.rerun()
 
-elif page == "Gráfico":    
+elif page == "Gráfico":
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
     tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
-    st.title("Análise do Ticker")
+    st.title("Análise do Gráfico")
     run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
 
 elif page == "Tabela":    
@@ -38,16 +38,18 @@ elif page == "Tabela":
 
     # Button to update data from yfinance
     if st.button("Update Data"):
+        data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
         try:
             with st.spinner("Atualizando..."):
                 tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
                 updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
+                st.success("Updated successfully!")
         except Exception as e:
             st.error(f"An error occurred while updating the data: {e}")
-
-    st.success("Updated successfully!")
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
     # Display tables
+    
     if data_frame_top_15_industry is not None:
         st.subheader("Top 15 Empresas Listadas")
         display_top_15_table(data_frame_top_15_industry)
@@ -55,8 +57,4 @@ elif page == "Tabela":
     if data_frame_precos_intradiarios is not None:
         st.subheader("Preços no período selecionado")
         display_intraday_prices_table(data_frame_precos_intradiarios)
-data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
-
-
-
 
