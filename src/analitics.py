@@ -7,6 +7,8 @@ import logging
 import os
 
 # Configure logging
+from datetime import date
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Constants
@@ -81,6 +83,29 @@ def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
         except Exception as e:
             logging.error(f"Error fetching data for {ticker}: {e}")
     return pd.concat(precos, ignore_index=True) if precos else pd.DataFrame()
+
+
+
+def get_company_data(ticker, start_date, end_date):
+    """
+    Fetches company information and historical prices for a given ticker.
+    
+    Args:
+        ticker (str): The stock ticker symbol.
+        start_date (date): The start date for historical prices.
+        end_date (date): The end date for historical prices.
+    
+    Returns:
+        dict: A dictionary containing the company's profile, market, volume, and historical prices.
+    """
+    try:
+        company = yf.Ticker(ticker)
+        info = company.info
+        history = company.history(start=start_date, end=end_date)
+        return {"profile": info.get("longBusinessSummary", "N/A"), "market": info.get("market", "N/A"), "volume": history.iloc[-1]['Volume'] if not history.empty else "N/A", "history": history}
+    except Exception as e:
+        logging.error(f"Error fetching data for {ticker}: {e}")
+        return {"profile": "N/A", "market": "N/A", "volume": "N/A", "history": pd.DataFrame()}
 
 if __name__ == "__main__":
     # Main execution block

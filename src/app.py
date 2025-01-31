@@ -8,6 +8,44 @@ from analitics import consultar_precos_intradiarios_yf
 # Configurar Logging - em testes
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def show_company_info(company_data, ticker):
+    """
+    Exibe informações da empresa e um gráfico de linha para um determinado ticker.
+
+    Args:
+        company_data (dict): Um dicionário contendo os dados da empresa.
+        ticker (str): O símbolo do ticker.
+    """
+    st.subheader(f"Informaçoes da empresa: {ticker}")
+    
+    if "profile" in company_data and company_data["profile"] != "N/A":
+        st.write(f"**Perfil:** {company_data['profile']}")
+    
+    if "market" in company_data and company_data["market"] != "N/A":
+        st.write(f"**Mercado:** {company_data['market']}")
+
+    if "volume" in company_data and company_data["volume"] != "N/A":
+        st.write(f"**Volume:** {company_data['volume']}")
+    
+    if "history" in company_data and not company_data["history"].empty:
+        # Obtém o último preço
+        last_price = company_data["history"]["Close"].iloc[-1]
+        
+        #Exibe o último preço
+        st.write(f"**Preço Atual:** {last_price}")
+        
+        #Gera o grafico
+        fig = px.line(
+            company_data["history"],
+            x=company_data["history"].index, 
+            y="Close",
+            title=f"Historical Prices for {ticker}",
+        ) #Gera o grafico
+        st.plotly_chart(fig)
+    
+
+
+
 # def para carregar Dataframes
 def load_data():
     """
@@ -90,7 +128,7 @@ def display_top_15_table(df):
         logging.info(f"DataFrame types:\n{df.dtypes}")
         st.dataframe(df)
         logging.info("Top 15 companies table displayed successfully.")
-    else:
+    else: # se o df for vazio
         st.error("DataFrame vazio")
         logging.error("DataFrame vazio")
 
@@ -102,7 +140,7 @@ def display_intraday_prices_table(df):
         logging.info(f"DataFrame types:\n{df.dtypes}")
         st.dataframe(df)
         logging.info("Intraday prices table displayed successfully.")
-    else:
+    else: #se o dataframe for vazio
         st.error("Dataframe vazio")
         logging.error("Dataframe vazio")
 
@@ -132,15 +170,15 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
                 logging.error("Falha ao atualizar os dados.")
             
                 
-        # local para outro graph - em teste -- st.subheader("Distribuição por Setor das 15 Maiores Empresas")
-        st.subheader("Série Temporal do Preço do Ticker")
+        # grafico de linha - Time Series
+        st.subheader("Série Temporal do Preço do Ticker") #Time Series
         unique_tickers = df_precos_intradiarios['symbol'].unique()
-        selected_ticker = st.selectbox("Selecione o Ticker", sorted(unique_tickers))
+        selected_ticker = st.selectbox("Selecione o Ticker", sorted(unique_tickers)) #select box
         if selected_ticker:
-            # Filter data for the selected ticker
+            # Filtra os dados para o ticker selecionado
             ticker_data = df_precos_intradiarios[df_precos_intradiarios['symbol'] == selected_ticker].copy()
-            # Calculate line color based on first and last price
-            first_price = ticker_data['close'].iloc[0]
+            # Calcula a cor da linha com base no primeiro e último preço
+            first_price = ticker_data['close'].iloc[0] 
             last_price = ticker_data['close'].iloc[-1]
             if last_price >= first_price:
                 line_color = 'green'
