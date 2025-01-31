@@ -204,7 +204,7 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
         return
     # Adiciona o disclaime dos precos normalizados
     st.write('Disclaimer: Este gráfico exibe os preços normalizados das ações selecionadas. A normalização permite comparar o desempenho relativo de diferentes ativos, ajustando seus preços para começar em 100 no início do período. Um valor acima de 100 indica valorização, enquanto abaixo de 100 indica desvalorização. Esta metodologia facilita a visualização da trajetória dos ativos, independentemente de seus preços iniciais.')
-        return
+    
 
     # Excluir a BOVA11.SA do analise comarativa - BOV e em ponto nao valor
     tickers_for_comparison = [t for t in selected_tickers if t != "BOVA11.SA"]
@@ -215,7 +215,7 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
             company_data = get_company_data("BOVA11.SA", start_date, end_date)
             # Display information for BOVA11.SA
             show_company_info(company_data, "BOVA11.SA")
-        return
+            return
     
     if len(tickers_for_comparison) > 1:
         # Fetch historical data for each ticker
@@ -229,7 +229,7 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
                     all_data[ticker] = data['normalized']
             except Exception as e:
                 st.error(f"Error fetching data for {ticker}: {e}")
-        
+
         #  graph comparativo
         if all_data:
             comparison_df = pd.DataFrame(all_data)
