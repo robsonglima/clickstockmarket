@@ -6,7 +6,7 @@ from app import run_app, load_data
 # --- Sidebar navigation ---
 st.sidebar.title("Menu")
 page = st.sidebar.radio(
-    "Go to", ["Home", "Table", "App"]
+    "Go to", ["Home", "Tabela", "App"]
 )  # Updated menu options and page names
 
 # --- Page Content ---
@@ -14,16 +14,16 @@ if page == "Home":
     st.title("Stock Analysis")  # Changed title
     st.write(
         """
-        Welcome to the Stock Analysis app!
-        
-        This application offers a suite of tools for in-depth stock market data analysis. 
-        You can investigate stock performance, interact with detailed tables, and much more.
-        
-        Use the menu on the left to navigate through the different sections of the application.
+            Bem-vindo ao Stock Analysis!
+
+            Descubra as correlações entre ações e identifique padrões que podem indicar boas oportunidades de investimento. Nossa plataforma permite analisar o comportamento do mercado em diferentes períodos de tempo, ajudando você a entender como os ativos se movem juntos e quais sinais podem antecipar tendências.
+
+            Use o menu para explorar os dados e aprimorar suas estratégias
+
         """
     )
-    if st.button("Click Me"):
-        st.write("Home button clicked!")
+    if st.button("Home"):
+        st.write("Home!")
 
 elif page == "Table":
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
