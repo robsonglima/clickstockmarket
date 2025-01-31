@@ -1,6 +1,6 @@
 import streamlit as st
-from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_frames, show_comparative_graph,show_company_info, analyze_trend_initiation
-from app import show_company_info
+from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_frames, show_comparative_graph, analyze_trend_initiation, show_company_info
+
 from analitics import get_company_data
 import pandas as pd
 from datetime import date
@@ -48,9 +48,15 @@ elif page == "Comparativo":
             show_company_info(company_data, ticker)
     
     
-        downward_trend, upward_trend = analyze_trend_initiation(selected_tickers, start_date, end_date)
-        st.write(f"**Primeira Tendência de Baixa Iniciada:** {downward_trend}")
-        st.write(f"**Primeira Tendência de Alta Iniciada:** {upward_trend}")
+        downward_trends, upward_trends = analyze_trend_initiation(selected_tickers, start_date, end_date)
+        
+        if downward_trends:
+            for ticker, time in downward_trends.items():
+                st.write(f"**Primeira Tendência de Baixa Iniciada:** {ticker} às {time.strftime('%d/%m/%Y %H:%M')}")
+
+        if upward_trends:
+            for ticker, time in upward_trends.items():
+                st.write(f"**Primeira Tendência de Alta Iniciada:** {ticker} às {time.strftime('%d/%m/%Y %H:%M')}")
 
 elif page == "Gráfico":
     st.title("Análise do Gráfico")

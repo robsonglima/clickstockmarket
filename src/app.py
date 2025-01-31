@@ -71,10 +71,11 @@ def load_data():
 
     df_top_15_industry = pd.read_csv(csv_top_15_industry_path, sep=";")
     try:
+
         df_precos_intradiarios = pd.read_csv(csv_precos_intradiarios_path)
     except pd.errors.EmptyDataError:
         return None, None, None
-    
+
     
     logging.info("Data loaded successfully.")
 
@@ -206,7 +207,7 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
     st.write('Disclaimer: Este gráfico exibe os preços normalizados das ações selecionadas. A normalização permite comparar o desempenho relativo de diferentes ativos, ajustando seus preços para começar em 100 no início do período. Um valor acima de 100 indica valorização, enquanto abaixo de 100 indica desvalorização. Esta metodologia facilita a visualização da trajetória dos ativos, independentemente de seus preços iniciais.')
     
 
-    # Excluir a BOVA11.SA do analise comarativa - BOV e em ponto nao valor
+    # Excluir a BOVA11.SA do analise comarativa - BOV e em ponto nao valor    
     tickers_for_comparison = [t for t in selected_tickers if t != "BOVA11.SA"]
 
     if not tickers_for_comparison:
@@ -247,7 +248,7 @@ def analyze_trend_initiation(selected_tickers, start_date, end_date):
         selected_tickers (list): Uma lista de símbolos de ticker.
         start_date (date): A data de início para a busca de dados.
         end_date (date): A data de término para a busca de dados.
-
+    
     Returns:
         tuple: Uma tupla contendo dois dicionários:
                - downward_trends (dict): Ticker e hora para a primeira tendência de baixa.
@@ -257,12 +258,12 @@ def analyze_trend_initiation(selected_tickers, start_date, end_date):
     upward_trends = {}
 
     for ticker in selected_tickers: 
-        try:
+        try: 
             # Fetch minute-by-minute data
             data = yf.download(ticker, start=start_date, end=end_date, interval="1m")
 
             if data.empty:
-                st.warning(f"No data found for {ticker} in the given time frame.")
+                st.warning(f"Dados de tendência para  {ticker} não encontrado.")
                 continue
 
             # Find the first downward trend
@@ -274,7 +275,8 @@ def analyze_trend_initiation(selected_tickers, start_date, end_date):
             
             if first_downward_trend_time is not None:
                 downward_trends[ticker] = first_downward_trend_time
-
+                
+                
             # Find the first upward trend
             first_upward_trend_time = None
             for i in range(1, len(data)):
@@ -283,9 +285,9 @@ def analyze_trend_initiation(selected_tickers, start_date, end_date):
                     break
 
             if first_upward_trend_time is not None:
-                upward_trends[ticker] = first_upward_trend_time
+                upward_trends[ticker] = first_upward_trend_time            
 
         except Exception as e:
-            st.error(f"Error analyzing trend for {ticker}: {e}")
+            st.error(f"Falha ao analiser tendências para {ticker}: {e}")
 
     return downward_trends, upward_trends
