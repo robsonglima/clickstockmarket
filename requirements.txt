@@ -6,6 +6,7 @@ requests
 numpy
 yfinance
 matplotlib
+plotly
 seaborn
 
 # App
