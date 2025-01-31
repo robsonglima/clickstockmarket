@@ -3,7 +3,6 @@ from app import load_data, run_app, display_top_15_table, display_intraday_price
 from analitics import consultar_precos_intradiarios_yf
  
 
-# --- Sidebar navigation --- 
 st.sidebar.title("Menu")
 page = st.sidebar.radio(
     "Go to", ["Home", "Tabela", "App"]
@@ -46,7 +45,10 @@ elif page == "Tabela":
             st.success("Data updated successfully!")
 
 
+
         except Exception as e:
+
+
             st.error(f"An error occurred while updating the data: {e}")
     
     # Display tables
@@ -57,6 +59,15 @@ elif page == "Tabela":
         st.subheader("Intraday Prices")
         display_intraday_prices_table(data_frame_precos_intradiarios)
 elif page == "App":
-    run_app(data_frame_top_15_industry, data_frame_precos_intradiarios)
+
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
+    
+    # Filter the data based on the selected period and interval
+    df_filtered = data_frame_precos_intradiarios.copy()
+    if period != "max":
+        df_filtered = df_filtered.last(period)
+
+    run_app(data_frame_top_15_industry, df_filtered, period, interval)
+
 
 

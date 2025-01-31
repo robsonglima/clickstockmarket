@@ -51,7 +51,7 @@ def display_intraday_prices_table(df):
 
 # Function to run the app
 # Main app structure
-def run_app(df_top_15_industry, df_precos_intradiarios):
+def run_app(df_top_15_industry, df_precos_intradiarios, period, interval):
     """Main function to run the Streamlit app."""
     st.title("Stock Market Analysis")
     logging.info("Starting Streamlit app...")
@@ -68,7 +68,11 @@ def run_app(df_top_15_industry, df_precos_intradiarios):
         selected_ticker = st.selectbox("Select Ticker", sorted(unique_tickers))
         if selected_ticker:
             # Filter data for the selected ticker
-            ticker_data = df_precos_intradiarios[df_precos_intradiarios['symbol'] == selected_ticker]
+            ticker_data = df_precos_intradiarios[
+                (df_precos_intradiarios['symbol'] == selected_ticker) &
+                (df_precos_intradiarios['period'] == period) &
+                (df_precos_intradiarios['interval'] == interval)
+            ]
             fig = px.line(ticker_data, x='datetime', y='close', title=f'Time Series for {selected_ticker}')
             st.plotly_chart(fig)
     else:
