@@ -9,47 +9,67 @@ from typing import List
 
 st.sidebar.title("Menu")
 
-def display_cards(stats):
+def format_number(number):
     """
-    Exibe três cards com estatísticas.
+    Formats a number to two decimal places if it's a float, otherwise returns the number as is.
+    """
+    if isinstance(number, float):
+        return "{:.2f}".format(number)
+    return number
+
+
+def display_cards(stats):
+    """Displays three cards with statistics using a modern design.
 
     Args:
-        stats (list): Uma lista de dicionários, onde cada dicionário contém o
-                      'name', 'stat', 'change' e 'changeType' para um card.
+        stats (list): A list containing the statistical data.
     """
+    if stats is None:
+        print('Stats are none')
+        return
     card_data = [
-        {'name': 'Média de Variação Diária', 'stat': None, 'change': None, 'changeType': None},
-        {'name': 'Volume Médio Diário', 'stat': None, 'change': None, 'changeType': None},
-        {'name': 'Desvio Padrão', 'stat': None, 'change': None, 'changeType': None}
+        {
+            'name': 'Média de Variação Diária',
+            'description': 'Variação média das ações em um dia',
+            'stat': format_number(stats[0]),
+            'change': stats[1],
+            'changeType': stats[2]
+        },
+        {
+            'name': 'Volume Médio Diário',
+            'description': 'Volume médio de negociações por dia',
+            'stat': format_number(stats[3]),
+            'change': stats[4],
+            'changeType': stats[5],
+        },
+        {
+            'name': 'Desvio Padrão',
+            'description': 'Volatilidade das variações diárias',
+            'stat': format_number(stats[6]),
+            'change': stats[7],
+            'changeType': stats[8]
+        }
     ]
 
-    if stats is not None:
-        card_data = [
-            {
-                'name': 'Média de Variação Diária',
-                'stat': stats[0],
-                'change': stats[1],
-                'changeType': stats[2]
-            },
-            {
-                'name': 'Volume Médio Diário',
-                'stat': stats[3],
-                'change': stats[4],
-                'changeType': stats[5],
-            },
-            {
-                'name': 'Desvio Padrão',
-                'stat': stats[6],
-                'change': stats[7],
-                'changeType': stats[8]
-            }
-        ]
-    
-    card_html = '<dl class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">'
+    card_html = '<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">'
     for item in card_data:
-        change_type_class = 'bg-emerald-100 text-emerald-800 ring-emerald-600/10 dark:bg-emerald-400/10 dark:text-emerald-500 dark:ring-emerald-400/20' if item['changeType'] == 'positive' else 'bg-red-100 text-red-800 ring-red-600/10 dark:bg-red-400/10 dark:text-red-500 dark:ring-red-400/20'
-        card_html += f'<div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"><div class="flex items-center justify-between"><dt class="truncate text-sm font-medium text-gray-500">{item["name"]}</dt><dd class="ml-2 flex items-baseline"><span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {change_type_class}">{item["change"]}</span></dd></div><div class="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6"><dd class="text-3xl font-semibold text-gray-900">{item["stat"]}</dd></div></div>'
-    card_html += '</dl>'
+        change_type_class = {
+            'positive': 'bg-green-200 text-green-800',
+            'negative': 'bg-red-200 text-red-800',
+            'neutral': 'bg-gray-200 text-gray-800'
+        }.get(item['changeType'], 'bg-gray-200 text-gray-800')
+        
+        card_html += f"""
+            <div class="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
+                <h3 class="text-lg font-bold text-gray-800 mb-1">{item['name']}</h3>
+                <p class="text-gray-600 text-sm mb-4">{item['description']}</p>
+                <div class="text-4xl font-extrabold text-blue-600 mb-4">{item['stat']}</div>
+                <div class="flex items-center">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {change_type_class}">{item['change']}</span>
+                </div>
+            </div>
+        """
+    card_html += '</div>'
     st.markdown(card_html, unsafe_allow_html=True)
     
 page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
@@ -148,4 +168,3 @@ elif page == "Tabela":
     if isinstance(data_frame_precos_intradiarios, pd.DataFrame):
         st.subheader("Preços no período selecionado")
         display_intraday_prices_table(data_frame_precos_intradiarios)
-
