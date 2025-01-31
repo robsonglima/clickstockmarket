@@ -1,7 +1,11 @@
-# Flask Web App Starter
+# Stock Analysis
 
-A Flask starter template as per [these docs](https://flask.palletsprojects.com/en/3.0.x/quickstart/#a-minimal-application).
+Bem-vindo ao Stock Analysis!
 
-## Getting Started
+Descubra as correlações entre ações e identifique padrões que podem indicar boas oportunidades de investimento. Nossa plataforma permite analisar o comportamento do mercado em diferentes períodos de tempo, ajudando você a entender como os ativos se movem juntos e quais sinais podem antecipar tendências
 
-Previews should run automatically when starting a workspace.
+## Em desenvolvimento
+
+
+
+
