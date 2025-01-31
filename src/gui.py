@@ -1,6 +1,7 @@
 import streamlit as st
 from app import *
 
+from analitics import analyze_trend_initiation
 from analitics import get_company_data
 import pandas as pd
 from datetime import date
@@ -26,19 +27,26 @@ def display_cards(stats: List[float] | None) -> None:
         stats: A list containing the statistical data, or None if no data is available.
     """
     if stats is None:
+        print('Stats are none')
         return
 
     card_data = [
-        {'name': 'Média de Variação Diária', 'description': 'Variação média das ações em um dia', 'stat': format_number(stats[0]), 'change': stats[1], 'changeType': stats[2]},
-        {'name': 'Volume Médio Diário', 'description': 'Volume médio de negociações por dia', 'stat': format_number(stats[3]), 'change': stats[4], 'changeType': stats[5]},
-        {'name': 'Desvio Padrão', 'description': 'Volatilidade das variações diárias', 'stat': format_number(stats[6]), 'change': stats[7], 'changeType': stats[8]}
+        {
+            'name': 'Média de Variação Diária', 'description': 'Variação média das ações em um dia', 'stat': format_number(stats[0]), 'change': stats[1], 'changeType': stats[2]
+        },
+        {
+            'name': 'Volume Médio Diário', 'description': 'Volume médio de negociações por dia', 'stat': format_number(stats[3]), 'change': stats[4], 'changeType': stats[5]
+        },
+        {
+            'name': 'Desvio Padrão', 'description': 'Volatilidade das variações diárias', 'stat': format_number(stats[6]), 'change': stats[7], 'changeType': stats[8]
+        }
     ]
 
-    card_html = '<dl class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">'
+    card_html = '<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">'
     for item in card_data:
         change_type_class = 'bg-emerald-100 text-emerald-800 ring-emerald-600/10 dark:bg-emerald-400/10 dark:text-emerald-500 dark:ring-emerald-400/20' if item['changeType'] == 'positive' else 'bg-red-100 text-red-800 ring-red-600/10 dark:bg-red-400/10 dark:text-red-500 dark:ring-red-400/20' if item['changeType'] == 'negative' else 'bg-gray-100 text-gray-800 ring-gray-600/10 dark:bg-gray-400/10 dark:text-gray-500 dark:ring-gray-400/20'
         card_html += f'<div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"><div class="flex items-center justify-between"><dt class="truncate text-sm font-medium text-gray-500">{item["name"]}</dt><dd class="ml-2 flex items-baseline"><span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {change_type_class}">{item["change"]}</span></dd></div><div class="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6"><dd class="text-3xl font-semibold text-gray-900">{item["stat"]}</dd></div></div>'
-    card_html += '</dl>'
+    card_html += '</div>'
     st.markdown(card_html, unsafe_allow_html=True)
     
 page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
@@ -58,7 +66,7 @@ if page == "Principal":
         )
     if st.button("Recarregar Principal"):
         
-        st.rerun()    
+        st.rerun()
 elif page == "Comparativo":
     st.title("Comparativo")
     data_frame_top_15_industry, _, _ = load_data()
@@ -71,32 +79,34 @@ elif page == "Comparativo":
 
     start_date = st.date_input("Data Inicial", date(2023, 1, 1))
     end_date = st.date_input("Data Final", date.today())
+    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
 
     company_data_list = []
     if selected_tickers:
         show_comparative_graph(selected_tickers, start_date, end_date)
+        stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
+        display_cards(stats)
         for ticker in selected_tickers:
             company_data = get_company_data(ticker, start_date, end_date)
             company_data_list.append(company_data)
 
-        for ticker, company_data in zip(selected_tickers,company_data_list):
+        for ticker, company_data in zip(selected_tickers, company_data_list):
             show_company_info(company_data, ticker)
     
     
         downward_trends, upward_trends = analyze_trend_initiation(selected_tickers, start_date, end_date)
 
-        if downward_trend:
-              for ticker, trend_time in downward_trends.items():
+        if downward_trends:
+            for ticker, trend_time in downward_trends.items():
                 st.write(f"**Primeira Tendência de Baixa Iniciada:** {ticker} em {trend_time}")
         else:
-                st.write(f"**Primeira Tendência de Baixa Iniciada:** Sem tendências detectadas.")
+            st.write(f"**Primeira Tendência de Baixa Iniciada:** Sem tendências detectadas.")
 
-        if upward_trend:
-              for ticker, trend_time in upward_trend.items():
+        if upward_trends:
+            for ticker, trend_time in upward_trends.items():
                 st.write(f"**Primeira Tendência de Alta Iniciada:** {ticker} em {trend_time}")
         else:
-              st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
-
+            st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
         
 elif page == "Gráfico":
     st.title("Análise do Gráfico")
