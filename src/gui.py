@@ -33,13 +33,13 @@ elif page == "Tabela":
     
     interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
     period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
-    interval = st.selectbox("Select Interval", interval_options, index=8)
-    period = st.selectbox("Select Period", period_options, index=5)
+    interval = st.selectbox("Selecione Intervalo", interval_options, index=8)
+    period = st.selectbox("Selecione Periodo", period_options, index=5)
     
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
     tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
     # Button to update data from yfinance
-    if st.button("Update Data"):
+    if st.button("Atualizar"):
          try:
             
             with st.spinner("Atualizando..."):
