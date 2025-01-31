@@ -7,10 +7,10 @@ from datetime import date
 
 
 st.sidebar.title("Menu")
-page = st.sidebar.radio(
-    "Ir para", ["Principal", "Dashboard", "Gráfico", "Tabela"]
-)
+page = st.sidebar.radio("Ir para", ["Principal", "Comparativo", "Gráfico", "Tabela"])
+
 if page == "Principal":
+
     st.title("Análise de Ações")
     st.markdown(
         """
@@ -24,8 +24,8 @@ if page == "Principal":
         )
     if st.button("Recarregar Principal"):
         st.rerun()    
-elif page == "Dashboard":
-    st.title("Dashboard")
+elif page == "Comparativo":
+    st.title("Comparativo")
     data_frame_top_15_industry, _, _ = load_data()
     
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
