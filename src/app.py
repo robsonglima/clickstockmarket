@@ -10,9 +10,17 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # def para carregar Dataframes
 def load_data():
-    """Loads the DataFrames from CSV files."""
+    """
+    Loads the DataFrames from CSV files and extracts the top 15 tickers.
+
+    Returns:
+        tuple: A tuple containing the df_top_15_industry DataFrame,
+               the df_precos_intradiarios DataFrame, and a list of
+               the top 15 tickers. or list with tickers.
+    """
     logging.info("Attempting to load data...")
     csv_top_15_industry_path = "src/df_top_15_com_industry.csv"
+
     csv_precos_intradiarios_path = "src/precos_intradiarios_top_15.csv"
 
     if not os.path.exists(csv_top_15_industry_path) or not os.path.exists(csv_precos_intradiarios_path):
@@ -23,14 +31,37 @@ def load_data():
     df_top_15_industry = pd.read_csv(csv_top_15_industry_path, sep=";")
     df_precos_intradiarios = pd.read_csv(csv_precos_intradiarios_path)
     logging.info("Data loaded successfully.")
-    return df_top_15_industry, df_precos_intradiarios
 
-def update_data_frames(tickers_top_15):
-    """Updates the DataFrames by loading data and consulting intraday prices."""
-    logging.info("Attempting to update data frames...")
-    df_top_15_industry, _ = load_data()
-    df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, "1d", "1mo")
     
+    
+
+    
+    
+    tickers_top_15 = df_precos_intradiarios['symbol'].unique().tolist() if not df_precos_intradiarios.empty else []
+
+    return df_top_15_industry, df_precos_intradiarios, tickers_top_15
+
+
+def update_data_frames(tickers):
+    """
+    Updates the DataFrames by consulting intraday prices for the given tickers.
+
+    Args:
+        tickers (list): A list of stock tickers to update.
+    
+    Returns:
+        tuple: A tuple containing the df_top_15_industry DataFrame, and the 
+               updated df_precos_intradiarios DataFrame.
+    """
+    logging.info("Attempting to update data frames...")
+    df_top_15_industry, _, _ = load_data()
+    if not tickers:
+        logging.error("Could not retrieve tickers.")
+        return None, None
+    
+    df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers, "1d", "1mo")
+    
+
     # Save the updated df_precos_intradiarios to the CSV file
     df_precos_intradiarios.to_csv("src/precos_intradiarios_top_15.csv", index=False)
     
@@ -70,16 +101,22 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
     """Main function to run the Streamlit app."""
     st.title("Análise do Mercado de Ações")
     logging.info("Starting Streamlit app...")
+    
+    
+    tickers_list = df_precos_intradiarios['symbol'].unique().tolist() if not df_precos_intradiarios.empty else []
 
-    if df_top_15_industry is not None and df_precos_intradiarios is not None:
+    
+    if df_top_15_industry is not None and df_precos_intradiarios is not None:        
         logging.info("DataFrames loaded successfully. Displaying content.")
         
+        
         if st.button("Atualizar"):
-            df_top_15_industry, df_precos_intradiarios = update_data_frames(tickers_top_15)
-            if df_precos_intradiarios is not None and df_top_15_industry is not None:
+            df_top_15_industry, df_precos_intradiarios = update_data_frames(tickers_list)
+            
+            if  df_precos_intradiarios is not None and df_top_15_industry is not None:
                 st.success("Dados atualizados com sucesso!")
                 logging.info("Data updated successfully.")
-            else:
+            else :
                 st.error("Falha ao atualizar os dados.")
                 logging.error("Falha ao atualizar os dados.")
             
