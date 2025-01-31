@@ -1,5 +1,5 @@
 import streamlit as st
-from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_frames, show_company_info
+from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_frames
 
 from analitics import get_company_data
 import pandas as pd
@@ -29,6 +29,7 @@ elif page == "Dashboard":
     st.title("Dashboard")
     tickers_list = ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "NVDA", "BRK-B", "JPM", "JNJ", "V", "WMT", "MA", "PG", "UNH", "HD"]
     selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
+
 
     start_date = st.date_input("Start date", date(2023, 1, 1))
     end_date = st.date_input("End date", date.today())
