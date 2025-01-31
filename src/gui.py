@@ -1,6 +1,6 @@
 import streamlit as st
 from table_app import display_table
-from .app import run_app
+from app import run_app
 from app import load_data
 
 # --- Sidebar navigation ---
