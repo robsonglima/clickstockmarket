@@ -27,13 +27,20 @@ def load_data():
         st.warning("Arquivos CSV não encontrados. Por favor, execute o script analytics.py primeiro.")
         logging.warning("CSV files missing.")
         return None, None
-    
+    if not os.path.exists(csv_precos_intradiarios_path):
+        return None, None, None
+
     df_top_15_industry = pd.read_csv(csv_top_15_industry_path, sep=";")
-    df_precos_intradiarios = pd.read_csv(csv_precos_intradiarios_path)
+    try:
+        df_precos_intradiarios = pd.read_csv(csv_precos_intradiarios_path)
+    except pd.errors.EmptyDataError:
+        return None, None, None
+    
+    
     logging.info("Data loaded successfully.")
 
-    
-    
+
+
 
     
     
@@ -59,14 +66,18 @@ def update_data_frames(tickers, interval, period):
         logging.error("Could not retrieve tickers.")
         return None
     
+
     df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers, interval, period)
     
+    if df_precos_intradiarios.empty:
+        return None
+    else:
+        # Save the updated df_precos_intradiarios to the CSV file
+        df_precos_intradiarios.to_csv("src/precos_intradiarios_top_15.csv", index=False)
+        
+        logging.info("Data frames updated successfully.")
+        return df_precos_intradiarios
 
-    # Save the updated df_precos_intradiarios to the CSV file
-    df_precos_intradiarios.to_csv("src/precos_intradiarios_top_15.csv", index=False)
-    
-    logging.info("Data frames updated successfully.")
-    return df_top_15_industry, df_precos_intradiarios
     
 
 # def para montar tabelas
@@ -111,7 +122,7 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
         
         
         if st.button("Atualizar"):
-            _, df_precos_intradiarios = update_data_frames(tickers_list, "1d", "1mo")
+            df_precos_intradiarios = update_data_frames(tickers_list, "1d", "1mo")
             
             if  df_precos_intradiarios is not None and df_top_15_industry is not None:
                 st.success("Dados atualizados com sucesso!")
