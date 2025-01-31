@@ -18,47 +18,40 @@ def display_cards(stats):
                       'name', 'stat', 'change' e 'changeType' para um card.
     """
     card_data = [
-        {
-            'name': 'Média de Variação Diária',
-            'stat': stats[0],
-            'change': stats[1],
-            'changeType': stats[2]
-        },
-        {
-            'name': 'Volume Médio Diário',
-            'stat': stats[3],
-            'change': stats[4],
-            'changeType': stats[5],
-        },
-        {
-            'name': 'Desvio Padrão',
-            'stat': stats[6],
-            'change': stats[7],
-            'changeType': stats[8]
-        }
+        {'name': 'Média de Variação Diária', 'stat': None, 'change': None, 'changeType': None},
+        {'name': 'Volume Médio Diário', 'stat': None, 'change': None, 'changeType': None},
+        {'name': 'Desvio Padrão', 'stat': None, 'change': None, 'changeType': None}
     ]
+
+    if stats is not None:
+        card_data = [
+            {
+                'name': 'Média de Variação Diária',
+                'stat': stats[0],
+                'change': stats[1],
+                'changeType': stats[2]
+            },
+            {
+                'name': 'Volume Médio Diário',
+                'stat': stats[3],
+                'change': stats[4],
+                'changeType': stats[5],
+            },
+            {
+                'name': 'Desvio Padrão',
+                'stat': stats[6],
+                'change': stats[7],
+                'changeType': stats[8]
+            }
+        ]
     
     card_html = '<dl class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">'
     for item in card_data:
-      card_html += f'''
-      <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
-        <div class="flex items-center justify-between">
-          <dt class="truncate text-sm font-medium text-gray-500">{item['name']}</dt>
-          <dd class="ml-2 flex items-baseline">
-          <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {'bg-emerald-100 text-emerald-800 ring-emerald-600/10 dark:bg-emerald-400/10 dark:text-emerald-500 dark:ring-emerald-400/20' if item['changeType'] == 'positive' else 'bg-red-100 text-red-800 ring-red-600/10 dark:bg-red-400/10 dark:text-red-500 dark:ring-red-400/20'}">
-            {item['change']}
-          </span>
-            </dd>
-        </div>
-        <div class="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-          <dd class="text-3xl font-semibold text-gray-900">
-          {item['stat']}
-          </dd>
-        </div>
-      </div>
-      '''
+        change_type_class = 'bg-emerald-100 text-emerald-800 ring-emerald-600/10 dark:bg-emerald-400/10 dark:text-emerald-500 dark:ring-emerald-400/20' if item['changeType'] == 'positive' else 'bg-red-100 text-red-800 ring-red-600/10 dark:bg-red-400/10 dark:text-red-500 dark:ring-red-400/20'
+        card_html += f'<div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"><div class="flex items-center justify-between"><dt class="truncate text-sm font-medium text-gray-500">{item["name"]}</dt><dd class="ml-2 flex items-baseline"><span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {change_type_class}">{item["change"]}</span></dd></div><div class="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6"><dd class="text-3xl font-semibold text-gray-900">{item["stat"]}</dd></div></div>'
     card_html += '</dl>'
     st.markdown(card_html, unsafe_allow_html=True)
+    
 page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
 
 if page == "Principal":
