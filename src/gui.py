@@ -1,5 +1,6 @@
 import streamlit as st
 from app import load_data, run_app, display_top_15_table, display_intraday_prices_table
+from analitics import consultar_precos_intradiarios_yf
  
 
 # --- Sidebar navigation --- 
@@ -35,13 +36,15 @@ elif page == "Tabela":
     period = st.selectbox("Select Period", period_options, index=5)  # Default to "1y"
 
     # Button to update data from yfinance
-    if st.button("Update Data from yfinance"):
+    if st.button("Update Data"):
         try:
             with st.spinner("Updating data..."):
-                 updated_df_top_15_industry, updated_df_precos_intradiarios = update_data_from_yfinance(interval, period)
-                 data_frame_top_15_industry = updated_df_top_15_industry
-                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
+                # Get intraday prices
+                tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+                updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
+                data_frame_precos_intradiarios = updated_df_precos_intradiarios
             st.success("Data updated successfully!")
+
 
         except Exception as e:
             st.error(f"An error occurred while updating the data: {e}")
