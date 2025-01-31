@@ -45,9 +45,9 @@ elif page == "Tabela":
             with st.spinner("Atualizando..."):
                 updated_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = updated_df_precos_intradiarios
-                st.success("Updated successfully!")
+                st.success("Atualizado com sucesso!")
          except Exception as e:
-             st.error(f"An error occurred while updating the data: {e}")
+             st.error(f"Ops, houve um erro ao atualizar: {e}")
     # Display tables
     
     if data_frame_top_15_industry is not None:

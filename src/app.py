@@ -5,10 +5,10 @@ import plotly.express as px
 import logging
 from analitics import consultar_precos_intradiarios_yf
 
-# Configure logging
+# Configurar Logging - em testes
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Function to Load the DataFrames
+# def para carregar Dataframes
 def load_data():
     """Loads the DataFrames from CSV files."""
     logging.info("Attempting to load data...")
@@ -25,8 +25,8 @@ def load_data():
     logging.info("Data loaded successfully.")
     return df_top_15_industry, df_precos_intradiarios
 
-# Functions to display tables
-# Function to display the top 15 companies table
+# def para montar tabelas
+# def para montar tabela - top 15 companies table
 def display_top_15_table(df):
     """Displays the table of top 15 companies."""
     logging.info("Displaying top 15 companies table...")
@@ -51,7 +51,7 @@ def display_intraday_prices_table(df):
         st.error("Dataframe vazio")
         logging.error("Dataframe vazio")
 
-# Function to run the app
+# def para rodar o app
 # Main app structure
 def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
     """Main function to run the Streamlit app."""
@@ -61,9 +61,9 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
     if df_top_15_industry is not None and df_precos_intradiarios is not None:
         logging.info("DataFrames loaded successfully. Displaying content.")
         
-        if st.button("Update Data"):
+        if st.button("Atualizar"):
             try:
-                # Update data from yfinance
+                # atualziar dados do yfinance
                 logging.info("Updating data from yfinance...")
                 new_df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15,"15min","1d")
                 if new_df_precos_intradiarios is not None:
@@ -77,7 +77,7 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
                 st.error(f"Ocorreu um erro ao atualizar os dados: {e}")
                 logging.error(f"Ocorreu um erro ao atualizar os dados: {e}")
                 
-        st.subheader("Distribuição por Setor das 15 Maiores Empresas")
+        # local para outro graph - em teste -- st.subheader("Distribuição por Setor das 15 Maiores Empresas")
         st.subheader("Série Temporal do Preço do Ticker")
         unique_tickers = df_precos_intradiarios['symbol'].unique()
         selected_ticker = st.selectbox("Selecione o Ticker", sorted(unique_tickers))
