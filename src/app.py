@@ -263,7 +263,7 @@ def analyze_trend_initiation(selected_tickers, start_date, end_date):
             data = yf.download(ticker, start=start_date, end=end_date, interval="1m")
 
             if data.empty:
-                st.warning(f"Dados de tendência para  {ticker} não encontrado.")
+                st.warning(f"Não há dados de tendência para {ticker} no intervalo selecionado.")
                 continue
 
             # Find the first downward trend
@@ -273,7 +273,7 @@ def analyze_trend_initiation(selected_tickers, start_date, end_date):
                     first_downward_trend_time = data.index[i]
                     break
             
-            if first_downward_trend_time is not None:
+            if first_downward_trend_time is not None:                
                 downward_trends[ticker] = first_downward_trend_time
                 
                 
@@ -288,6 +288,10 @@ def analyze_trend_initiation(selected_tickers, start_date, end_date):
                 upward_trends[ticker] = first_upward_trend_time            
 
         except Exception as e:
-            st.error(f"Falha ao analiser tendências para {ticker}: {e}")
+            st.error(f"Falha ao analisar tendências para {ticker}: {e}")
 
-    return downward_trends, upward_trends
+    # Format the output to display date and time
+    formatted_downward_trends = {ticker: time.strftime('%Y-%m-%d %H:%M') for ticker, time in downward_trends.items()}
+    formatted_upward_trends = {ticker: time.strftime('%Y-%m-%d %H:%M') for ticker, time in upward_trends.items()}
+
+    return formatted_downward_trends, formatted_upward_trends
