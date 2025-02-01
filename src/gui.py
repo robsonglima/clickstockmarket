@@ -1,6 +1,6 @@
 import streamlit as st
 from app import *
-from analitics import analyze_trend_initiation, get_company_data, load_data
+from analitics import analyze_trend_initiation, get_company_data, load_data, update_data_frames, show_graph_selected_tickers
 
 st.sidebar.title("Menu")
 
@@ -11,11 +11,13 @@ def format_number(number):
     return number
 
 #Create the sidebar to navigate between pages.
-page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
+if "page" not in st.session_state:
+    st.session_state.page = "Principal"
 
-end_date = date.today()
+def change_page(new_page):
+    st.session_state.page = new_page
 
-if page == "Principal":
+if st.session_state.page == "Principal":
     st.title("Análise de Ações")
     st.markdown("""
             Bem-vindo ao Análise de Ações!
@@ -31,20 +33,15 @@ if page == "Principal":
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("Comparativo", key='comparativo'):
-            st.session_state.page = "Comparativo"
-            st.rerun()
+        st.button("Comparativo", on_click=change_page, args=("Comparativo",))
 
     with col2:
-        if st.button("Gráfico", key='grafico'):
-            st.session_state.page = "Gráfico"
-            st.rerun()           
+        st.button("Gráfico", on_click=change_page, args=("Gráfico",))
+
     with col3:
-        if st.button("Tabela", key='tabela'):
-            st.session_state.page = "Tabela"
-            st.rerun()
-            
-elif page == "Comparativo":
+        st.button("Tabela", on_click=change_page, args=("Tabela",))
+
+elif st.session_state.page == "Comparativo":
     st.title("Comparativo")
     data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data('1d', '1y')
 
@@ -54,7 +51,8 @@ elif page == "Comparativo":
     else:
         selected_tickers = []
 
-    start_date = st.date_input("Data Inicial", date(2023, 1, 1)) #Date to start the graphic and info.
+    from datetime import date
+    start_date = st.date_input("Data Inicial", date(2023, 1, 1))
 
     company_data_list = []
 
@@ -82,7 +80,7 @@ elif page == "Comparativo":
             st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
         
 
-elif page == "Gráfico":
+elif st.session_state.page == "Gráfico":
     st.title("Gráfico de Ações")
 
     interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d"]
@@ -105,7 +103,7 @@ elif page == "Gráfico":
     else:
         st.write("Não foi possível carregar os dados dos tickers.")
 
-elif page == "Tabela":
+elif st.session_state.page == "Tabela":
 
     st.title("Tabelas de Dados")
 
@@ -124,7 +122,7 @@ elif page == "Tabela":
                 with st.spinner("Atualizando..."):
                     data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = pd.read_csv("src/precos_intradiarios_top_15.csv")
-                tickers_top_15 = data_frame_precos_intradiarios["symbol"].unique().tolist()
+                tickers_top_15 = list(set(data_frame_precos_intradiarios["symbol"].tolist()))
             except Exception as e:
                 st.error(f"Ops, houve um erro ao atualizar: {e}")
     
