@@ -18,7 +18,6 @@ OUTPUT_DIR = "src"
 
 # Create the output directory if it doesn't exist
 if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
 
 OUTPUT_FILE_INDUSTRY = os.path.join(OUTPUT_DIR, "df_top_15_com_industry.csv")
 OUTPUT_FILE_INTRADAY = os.path.join(OUTPUT_DIR, "precos_intradiarios_top_15.csv")
@@ -56,8 +55,6 @@ def preencher_industry(df):
             logging.error(f"Error fetching industry for {ticker}: {e}")
             industries.append("Erro")
 
-    
-
     df['Industry'] = industries
     return df
 
@@ -74,8 +71,6 @@ def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
 
             dados = dados[["datetime", "symbol", "volume", "open", "high", "low", "close"]]
             precos.append(dados)
-            
-
 
             logging.info(f"Data fetched for {ticker}")
         except Exception as e:
@@ -137,49 +132,7 @@ def analyze_trend_initiation(tickers, start_date, end_date):
                         if ticker not in upward_trends:
                             upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
                             break
-        except Exception as e:
+        except Exception as e: 
             logging.error(f"Error analyzing trends for {ticker}: {e}")
     return downward_trends, upward_trends
-    
-if __name__ == "__main__":
-    # Main execution block
-    df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')
-
-    if df is not None:
-        #Incluindo .SA no TRacker para consultar no Yahoo Finance
-        df['TckrSymb'] = df['TckrSymb'] + '.SA'
-        df_filtrado_segmento = df[df['SgmtNm'].str.contains('CASH', na=False)]
-        df_top_15 = df_filtrado_segmento.nlargest(TOP_N, 'TradQty')
-
-        # adicionando mercado na tabela -  industry 
-        df_top_15_atualizado = preencher_industry(df_top_15)
-        print(df_top_15_atualizado)
-        #Save industry data
-        try:
-            df_top_15_atualizado.to_csv(OUTPUT_FILE_INDUSTRY, index=False, sep=";")
-            logging.info(f"{OUTPUT_FILE_INDUSTRY} saved successfully.")
-        except Exception as e:
-            logging.error(f"Error saving {OUTPUT_FILE_INDUSTRY}: {e}")
-
-        # atualziando intraday - precos
-        tickers_top_15 = df_top_15_atualizado['TckrSymb'].tolist()        
-        df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15)
-        
-        #adicionando info de mercado (industry) no df_precos_intradiarios
-        industry_mapping = df_top_15_atualizado.set_index('TckrSymb')['Industry'].to_dict()
-        df_precos_intradiarios['Industry'] = df_precos_intradiarios['symbol'].map(industry_mapping)
-        
-        #Adicionanod industry no df_precos
-        df_precos = df_precos_intradiarios
-
-
-        print("df_precos_intradiarios")
-        print(df_precos_intradiarios.head())        
-
-        #Salvar o intraday data - mensage somente no log
-        try:
-            df_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)
-            logging.info(f"{OUTPUT_FILE_INTRADAY} saved successfully.")
-        except Exception as e:
-            logging.error(f"Error saving {OUTPUT_FILE_INTRADAY}: {e}")
 

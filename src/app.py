@@ -1,14 +1,11 @@
 import streamlit as st
 import pandas as pd
 import os
-import yfinance as yf
 import plotly.express as px
-import logging
 from analitics import consultar_precos_intradiarios_yf
 
 # Configurar Logging - em testes
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 def show_company_info(company_data, ticker):
     """Exibe informações da empresa e um gráfico de linha para um determinado ticker.
 
@@ -29,13 +26,9 @@ def show_company_info(company_data, ticker):
         st.write(f"**Volume:** {company_data['volume']}")
     
     if "history" in company_data and not company_data["history"].empty:
-        # Obtém o último preço
         last_price = company_data["history"]["Close"].iloc[-1]
-        
-        #Exibe o último preço
         st.write(f"**Preço Atual:** {last_price}")
-        
-        #Gera o grafico
+
         fig = px.line(
             company_data["history"],
             x=company_data["history"].index, 
@@ -43,12 +36,8 @@ def show_company_info(company_data, ticker):
             title=f"Historical Prices for {ticker}",
         ) #Gera o grafico
         st.plotly_chart(fig)
-    
 
-
-
-# def para carregar Dataframes
-def load_data():
+def load_data(interval = "1d", period="1y"):
     """Carrega os DataFrames a partir de arquivos CSV e extrai os 15 principais tickers.
 
     Returns:
@@ -61,13 +50,16 @@ def load_data():
 
     csv_precos_intradiarios_path = "src/precos_intradiarios_top_15.csv"
 
-    if not os.path.exists(csv_top_15_industry_path) or not os.path.exists(csv_precos_intradiarios_path):
-        st.warning("Arquivos CSV não encontrados. Por favor, execute o script analytics.py primeiro.")
+    if not os.path.exists(csv_top_15_industry_path):
+        st.warning("Arquivos CSV não encontrados")
         logging.warning("CSV files missing.")
-        return None, None
-    if not os.path.exists(csv_precos_intradiarios_path):
-        return None, None, None
+        return None, None, None        
 
+    if not os.path.exists(csv_precos_intradiarios_path):
+        logging.warning(f"File {csv_precos_intradiarios_path} not found.")
+        st.warning("Arquivos CSV de precos nao encontrados. Por favor, execute o script analytics.py primeiro.")        
+        return None, None, None
+    
     df_top_15_industry = pd.read_csv(csv_top_15_industry_path, sep=";")
     try:
 
@@ -75,12 +67,7 @@ def load_data():
     except pd.errors.EmptyDataError:
       return None, None, None
 
-    
     logging.info("Data loaded successfully.")
-
-
-
-
     
     
     tickers_top_15 = df_precos_intradiarios['symbol'].unique().tolist() if not df_precos_intradiarios.empty else []
@@ -104,21 +91,16 @@ def update_data_frames(tickers, interval, period):
         logging.error("Could not retrieve tickers.")
         return None
     
+    df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers, interval, period)   
 
-    df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers, interval, period)
-    
     if df_precos_intradiarios.empty:
-        return None
-    else:
+        st.warning("Sem dados retornados para o período selecionado. Por favor, altere a data ou período.")    
         # Save the updated df_precos_intradiarios to the CSV file
         df_precos_intradiarios.to_csv("src/precos_intradiarios_top_15.csv", index=False)
         
         logging.info("Data frames updated successfully.")
         return df_precos_intradiarios
 
-    
-
-# def para montar tabelas
 # def para montar tabela - top 15 companies table
 def display_top_15_table(df):
     """Exibe a tabela das 15 principais empresas."""
@@ -143,8 +125,6 @@ def display_intraday_prices_table(df):
     else: #se o dataframe for vazio
         st.error("Dataframe vazio")
         logging.error("Dataframe vazio")
-
-# def para rodar o app
 # Main app structure
 def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
     """Função principal para executar o aplicativo Streamlit.
@@ -180,18 +160,10 @@ def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
         logging.info("DataFrames loaded successfully. Displaying content.")
         
         
-        if st.button("Atualizar"):
-            df_precos_intradiarios = update_data_frames(tickers_list, "1d", "1mo")
-            
-            if  df_precos_intradiarios is not None and df_top_15_industry is not None:
-                st.success("Dados atualizados com sucesso!")
-                logging.info("Data updated successfully.")
-            else :
-                st.error("Falha ao atualizar os dados.")
-                logging.error("Falha ao atualizar os dados.")
-        
+        if st.button("Atualizar"):                
+            df_precos_intradiarios = update_data_frames(tickers_list, "1d", "1y")
+            st.success("Dados atualizados com sucesso!")
         # gráfico de linha - Time Series
-        st.subheader("Série Temporal do Preço do Ticker") #Série Temporal
         unique_tickers = df_precos_intradiarios['symbol'].unique()
         selected_ticker = st.selectbox("Selecione o Ticker", sorted(unique_tickers))
         if selected_ticker:
@@ -228,8 +200,7 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
     st.write('Disclaimer: Este gráfico exibe os preços normalizados das ações selecionadas. A normalização permite comparar o desempenho relativo de diferentes ativos, ajustando seus preços para começar em 100 no início do período. Um valor acima de 100 indica valorização, enquanto abaixo de 100 indica desvalorização. Esta metodologia facilita a visualização da trajetória dos ativos, independentemente de seus preços iniciais.')
     
 
-    # Excluir a BOVA11.SA do analise comarativa - BOV e em ponto nao valor    
-    tickers_for_comparison = [t for t in selected_tickers if t != "BOVA11.SA"]
+    tickers_for_comparison = [t for t in selected_tickers if t != "BOVA11.SA"]    
 
     if not tickers_for_comparison:
         if "BOVA11.SA" in selected_tickers:
@@ -259,7 +230,7 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
             fig.update_layout(xaxis_title="Data", yaxis_title="Preço Normalizado (%)")
             st.plotly_chart(fig)
     elif len(tickers_for_comparison) == 1:
-            st.write("Selecione dois ou mais tickers para comparar")
+        st.write("Selecione dois ou mais tickers para comparar")
 
 def analyze_trend_initiation(selected_tickers, start_date, end_date):
     """Analisa o início de tendências de alta e baixa para os tickers selecionados.
@@ -277,32 +248,30 @@ def analyze_trend_initiation(selected_tickers, start_date, end_date):
     upward_trends = {}
 
     for ticker in selected_tickers:
-      try:
-        # Fetch minute-by-minute data
-        data = yf.download(ticker, start=start_date, end=end_date, interval="1m")
+        try:
+            data = yf.download(ticker, start=start_date, end=end_date, interval="1m")
 
-        if data.empty:
-          st.warning(f"No data found for {ticker} in the given time frame.")
-          continue
+            if data.empty:
+                st.warning(f"No data found for {ticker} in the given time frame.")
+                continue
 
-        # Find the first downward trend
-        first_downward_trend_time = None
-        for i in range(1, len(data)):
-          if data['Close'].iloc[i] < data['Close'].iloc[i - 1]:
-            first_downward_trend_time = data.index[i]
-            first_downward_trend_time_formatted = data.index[i].strftime('%Y-%m-%d %H:%M')
-            downward_trends[ticker] = first_downward_trend_time_formatted
-            break
+            # Find the first downward trend
+            first_downward_trend_time = None
+            for i in range(1, len(data)):
+                if data['Close'].iloc[i] < data['Close'].iloc[i - 1]:
+                    first_downward_trend_time = data.index[i]
+                    first_downward_trend_time_formatted = data.index[i].strftime('%Y-%m-%d %H:%M')
+                    downward_trends[ticker] = first_downward_trend_time_formatted
+                    break
 
-        # Find the first upward trend
-        first_upward_trend_time = None
-        for i in range(1, len(data)):
-          if data['Close'].iloc[i] > data['Close'].iloc[i - 1]:
-            first_upward_trend_time = data.index[i]
-            first_upward_trend_time_formatted = data.index[i].strftime('%Y-%m-%d %H:%M')
-            upward_trends[ticker] = first_upward_trend_time_formatted
-            break
-      except Exception as e:
-            st.error(f"Falha ao analisar tendências para {ticker}: {e}")
+            # Find the first upward trend
+            first_upward_trend_time = None
+            for i in range(1, len(data)):
+                if data['Close'].iloc[i] > data['Close'].iloc[i - 1]:
+                    first_upward_trend_time = data.index[i]
+                    first_upward_trend_time_formatted = data.index[i].strftime('%Y-%m-%d %H:%M')
+                    upward_trends[ticker] = first_upward_trend_time_formatted
+                    break
+        except Exception as e:
+                st.error(f"Falha ao analisar tendências para {ticker}: {e}")
     return downward_trends, upward_trends
-

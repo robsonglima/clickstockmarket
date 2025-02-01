@@ -1,8 +1,7 @@
 import streamlit as st
 from app import *
 from typing import List
-from analitics import analyze_trend_initiation
-from analitics import get_company_data, update_data_frames
+from analitics import analyze_trend_initiation, get_company_data
 import pandas as pd
 from datetime import date
 
@@ -96,11 +95,12 @@ elif page == "Comparativo":
         
         show_comparative_graph(selected_tickers, start_date, end_date)       
 
-        for ticker, company_data in zip(selected_tickers, company_data_list):
-            show_company_info(company_data, ticker)
         for ticker in selected_tickers:
             company_data = get_company_data(ticker, start_date, end_date)
-    
+            company_data_list.append(company_data)
+            
+        for ticker, company_data in zip(selected_tickers, company_data_list):
+            show_company_info(company_data, ticker)
         downward_trends, upward_trends = analyze_trend_initiation(selected_tickers, start_date, end_date)
 
         if downward_trends:
@@ -139,7 +139,7 @@ elif page == "Tabela":
         if st.button("Atualizar"):
             tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
             try:
-                with st.spinner("Atualizando..."):
+                with st.spinner("Atualizando..."):                
                     data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
                     st.success("Atualizado com sucesso!")
 
