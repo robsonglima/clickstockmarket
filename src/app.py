@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import os
+import logging
 import plotly.express as px
 from analitics import consultar_precos_intradiarios_yf
 
-# Configurar Logging - em testes
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 def show_company_info(company_data, ticker):
     """Exibe informações da empresa e um gráfico de linha para um determinado ticker.
@@ -125,65 +125,6 @@ def display_intraday_prices_table(df):
     else: #se o dataframe for vazio
         st.error("Dataframe vazio")
         logging.error("Dataframe vazio")
-# Main app structure
-def run_app(df_top_15_industry, df_precos_intradiarios, tickers_top_15):
-    """Função principal para executar o aplicativo Streamlit.
-
-    Returns:
-    list: uma lista com 9 valores."""
-    if df_precos_intradiarios.empty:
-        return [None, None, None, None, None, None, None, None, None]
-
-    # calcualr a media daily variation
-    daily_variation = df_precos_intradiarios.groupby('symbol')['close'].diff().mean()
-    avg_daily_variation = daily_variation
-    avg_daily_variation_str = "+" if avg_daily_variation >= 0 else "-"
-    avg_daily_variation_type = "positive" if avg_daily_variation >= 0 else "negative"
-
-    # Calculate the average volume
-    avg_volume = df_precos_intradiarios['volume'].mean()
-    avg_volume_diff = df_precos_intradiarios['volume'].diff().mean()
-    avg_volume_str = "+" if avg_volume_diff >= 0 else "-"
-    avg_volume_type = "positive" if avg_volume_diff >= 0 else "negative"
-
-    # Calculate standard deviation of daily variation
-    std_dev_daily_variation = df_precos_intradiarios.groupby('symbol')['close'].diff().std()
-    std_dev_daily_variation_diff = std_dev_daily_variation.mean()
-    std_dev_daily_variation_str = "+" if std_dev_daily_variation_diff >= 0 else "-"
-    std_dev_daily_variation_type = "positive" if std_dev_daily_variation_diff >= 0 else "negative"
-    
-    st.title("Analise do Mercado de Ações")
-    tickers_list = df_precos_intradiarios['symbol'].unique().tolist() if not df_precos_intradiarios.empty else []
-    
-    
-    if df_top_15_industry is not None and df_precos_intradiarios is not None:        
-        logging.info("DataFrames loaded successfully. Displaying content.")
-        
-        
-        if st.button("Atualizar"):                
-            df_precos_intradiarios = update_data_frames(tickers_list, "1d", "1y")
-            st.success("Dados atualizados com sucesso!")
-        # gráfico de linha - Time Series
-        unique_tickers = df_precos_intradiarios['symbol'].unique()
-        selected_ticker = st.selectbox("Selecione o Ticker", sorted(unique_tickers))
-        if selected_ticker:
-
-            # Filtra os dados para o ticker selecionado
-            ticker_data = df_precos_intradiarios[df_precos_intradiarios['symbol'] == selected_ticker].copy()
-            # Calcula a cor da linha com base no primeiro e último preço
-            first_price = ticker_data['close'].iloc[0] 
-            last_price = ticker_data['close'].iloc[-1]
-            if last_price >= first_price:
-                line_color = 'green'
-            else:
-                line_color = 'red'            
-            fig = px.line(ticker_data, x='datetime', y='close', title=f'Time Series for {selected_ticker}', color_discrete_sequence=[line_color])
-
-            logging.info("Starting Streamlit app...")
-            st.plotly_chart(fig)
-
-    else:
-        logging.error("One or both DataFrames are None. Content will not be displayed.")
 
 def show_comparative_graph(selected_tickers, start_date, end_date):
     """

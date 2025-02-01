@@ -1,56 +1,18 @@
 import streamlit as st
 from app import *
-from typing import List
+
 from analitics import analyze_trend_initiation, get_company_data
 import pandas as pd
 from datetime import date
 
 st.sidebar.title("Menu")
 
-def format_number(number):
-    """
-    Formats a number to two decimal places if it's a float, otherwise returns the number as is.
-    """
-    if isinstance(number, float):
-        return "{:.2f}".format(number)
-    return number
-
-
-def display_cards(stats: List[float] | None) -> None:
-    """
-    Display three cards with statistics using a modern design.
-
-    Args:
-        stats: A list containing the statistical data, or None if no data is available.
-    """
-    if stats is None:
-        return
-
-    card_data = [
-        {
-            'name': 'Média de Variação Diária', 'description': 'Variação média das ações em um dia', 'stat': format_number(stats[0]), 'change': stats[1], 'changeType': stats[2]
-        },
-        {
-            'name': 'Volume Médio Diário', 'description': 'Volume médio de negociações por dia', 'stat': format_number(stats[3]), 'change': stats[4], 'changeType': stats[5]
-        },
-        {
-            'name': 'Desvio Padrão', 'description': 'Volatilidade das variações diárias', 'stat': format_number(stats[6]), 'change': stats[7], 'changeType': stats[8]
-        }
-    ]
-
-    card_html = '<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">'
-    for item in card_data:
-        change_type_class = {
-            'positive': 'bg-green-200 text-green-800',
-            'negative': 'bg-red-200 text-red-800',
-            'neutral': 'bg-gray-200 text-gray-800'
-        }.get(item['changeType'], 'bg-gray-200 text-gray-800')
-        card_html += f"""<div class="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between"><h3 class="text-lg font-bold text-gray-800 mb-1">{item['name']}</h3><p class="text-gray-600 text-sm mb-4">{item['description']}</p><div class="text-4xl font-extrabold text-blue-600 mb-4">{item['stat']}</div><div class="flex items-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {change_type_class}">{item['change']}</span></div></div>"""
-    
-    card_html += '</div>'
-    st.markdown(card_html, unsafe_allow_html=True)
+from app import display_intraday_prices_table, display_top_15_table, load_data
+from app import show_company_info, show_comparative_graph, update_data_frames
+from analitics import analyze_trend_initiation, get_company_data
 
 def load_data_no_tickers():
+    """Load the data without tickers."""
     data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data(interval='1d', period='1y')
     return data_frame_top_15_industry, data_frame_precos_intradiarios
     
@@ -59,7 +21,7 @@ page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico"
 
 end_date = date.today()
 
-
+    
 if page == "Principal":
 
     st.title("Análise de Ações")
@@ -72,16 +34,14 @@ if page == "Principal":
             Use a barra lateral para explorar os dados e melhorar suas estratégias.
 
         """
-        )
-
-    
+    )    
 elif page == "Comparativo":
     st.title("Comparativo")
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
 
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
-        
+
         
         selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
     else:
@@ -115,14 +75,9 @@ elif page == "Comparativo":
         else:
             st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
         
-    
 
 elif page == "Gráfico":
-    st.title("Análise do Gráfico")
-    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
-
-    stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,data_frame_top_15_industry['TckrSymb'].tolist())
-    display_cards(stats)
+    st.title("Gráfico")
 
 elif page == "Tabela":
 
@@ -139,7 +94,7 @@ elif page == "Tabela":
         if st.button("Atualizar"):
             tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
             try:
-                with st.spinner("Atualizando..."):                
+                with st.spinner("Atualizando..."):
                     data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
                     st.success("Atualizado com sucesso!")
 
