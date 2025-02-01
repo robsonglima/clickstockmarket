@@ -154,35 +154,20 @@ def load_data(interval = "1d", period="1y"):
     except Exception as e:
         logging.error(f"Error loading data: {e}")
         df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')
-
         if df is not None:
             df['TckrSymb'] = df['TckrSymb'] + '.SA'
             df_filtrado_segmento = df[df['SgmtNm'].str.contains('CASH', na=False)]
             data_frame_top_15_industry = df_filtrado_segmento.nlargest(TOP_N, 'TradQty')
             data_frame_top_15_industry = preencher_industry(data_frame_top_15_industry)
             data_frame_top_15_industry.to_csv(OUTPUT_FILE_INDUSTRY, index=False, sep=";")
+        
+        tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()        
+        data_frame_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15,interval, period)
+        
+        industry_mapping = data_frame_top_15_industry.set_index('TckrSymb')['Industry'].to_dict()
+        data_frame_precos_intradiarios['Industry'] = data_frame_precos_intradiarios['symbol'].map(industry_mapping)
+        data_frame_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)
+        logging.info("Data load with sucefull.")
     tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()        
-    data_frame_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15,interval, period)
-    
-    industry_mapping = data_frame_top_15_industry.set_index('TckrSymb')['Industry'].to_dict()
-    data_frame_precos_intradiarios['Industry'] = data_frame_precos_intradiarios['symbol'].map(industry_mapping)
-    data_frame_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)
-    logging.info("Data load with sucefull.")
-    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
 
     return data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15
-        
-
-                    
-                   
-                        if ticker not in downward_trends:   
-                            downward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
-                            break 
-                    # Check for upward trend
-                    elif all(data[j] < data[j+1] for j in range(i - window_size + 1, i)):
-                        if ticker not in upward_trends:
-                            upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
-                            break
-    
-
-    
