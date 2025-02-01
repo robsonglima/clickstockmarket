@@ -1,6 +1,6 @@
 import streamlit as st
 from app import *
-from analitics import analyze_trend_initiation, get_company_data, load_data, update_data_frames
+from analitics import analyze_trend_initiation, get_company_data, load_data
 
 st.sidebar.title("Menu")
 
@@ -114,18 +114,7 @@ elif st.session_state.page == "Tabela":
     period = st.selectbox("Selecione o Período", period_options, index=5)
 
     data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data(interval, period)
-
-    if isinstance(data_frame_top_15_industry, pd.DataFrame):
-        if st.button("Atualizar"):
-            tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
-            try:
-                with st.spinner("Atualizando..."):
-                    data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
-                data_frame_precos_intradiarios = pd.read_csv("src/precos_intradiarios_top_15.csv")
-                tickers_top_15 = list(set(data_frame_precos_intradiarios["symbol"].tolist()))
-            except Exception as e:
-                st.error(f"Ops, houve um erro ao atualizar: {e}")
-    
+   
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         st.subheader("Top 15 Empresas Listadas")
         display_top_15_table(data_frame_top_15_industry)
