@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import os
+import yfinance as yf
 import logging
 import plotly.express as px
 from analitics import consultar_precos_intradiarios_yf
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 def show_company_info(company_data, ticker):
     """Exibe informações da empresa e um gráfico de linha para um determinado ticker.
@@ -33,7 +33,7 @@ def show_company_info(company_data, ticker):
             company_data["history"],
             x=company_data["history"].index, 
             y="Close",
-            title=f"Historical Prices for {ticker}",
+            title=f"Preços históricos para {ticker}",
         ) #Gera o grafico
         st.plotly_chart(fig)
 
@@ -143,16 +143,16 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
 
     tickers_for_comparison = [t for t in selected_tickers if t != "BOVA11.SA"]    
 
-    if not tickers_for_comparison:
+    if len(tickers_for_comparison) > 1:
+        # Adiciona o disclaime dos precos normalizados
+        st.write('Disclaimer: Este gráfico exibe os preços normalizados das ações selecionadas. A normalização permite comparar o desempenho relativo de diferentes ativos, ajustando seus preços para começar em 100 no início do período. Um valor acima de 100 indica valorização, enquanto abaixo de 100 indica desvalorização. Esta metodologia facilita a visualização da trajetória dos ativos, independentemente de seus preços iniciais.')
+        # Fetch data for BOVA11.SA
         if "BOVA11.SA" in selected_tickers:
-             # Fetch data for BOVA11.SA
             company_data = get_company_data("BOVA11.SA", start_date, end_date)
             # Display information for BOVA11.SA
             show_company_info(company_data, "BOVA11.SA")
-            return
-    
-    if len(tickers_for_comparison) > 1:
-        # Fetch historical data for each ticker
+
+       # Fetch historical data for each ticker
         all_data = {}
         for ticker in tickers_for_comparison:
             try:
@@ -171,6 +171,10 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
             fig.update_layout(xaxis_title="Data", yaxis_title="Preço Normalizado (%)")
             st.plotly_chart(fig)
     elif len(tickers_for_comparison) == 1:
+          # Fetch data for BOVA11.SA
+          if "BOVA11.SA" in selected_tickers:
+                company_data = get_company_data("BOVA11.SA", start_date, end_date)
+                show_company_info(company_data, "BOVA11.SA")
         st.write("Selecione dois ou mais tickers para comparar")
 
 def analyze_trend_initiation(selected_tickers, start_date, end_date):

@@ -2,17 +2,13 @@ import streamlit as st
 from app import *
 from analitics import analyze_trend_initiation, get_company_data
 import pandas as pd
-from datetime import date
-from app import display_intraday_prices_table, display_top_15_table, load_data
-from app import show_company_info, show_comparative_graph, update_data_frames
+from datetime import date, datetime
+import yfinance as yf
+
+
+page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
 
 st.sidebar.title("Menu")
-
-def load_data_no_tickers():
-    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data('1d', '1y')
-    return data_frame_top_15_industry, data_frame_precos_intradiarios
-    
-page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
 
 
 end_date = date.today()
@@ -21,22 +17,22 @@ if page == "Principal":
 
     st.title("Análise de Ações")
     st.markdown(
-        """
-            Bem-vindo ao Análise de Ações!
+            """
+                Bem-vindo ao Análise de Ações!
 
-            Descubra as correlações entre ações e identifique padrões que podem indicar boas oportunidades de investimento. Nossa plataforma permite que você analise o comportamento do mercado em diferentes períodos de tempo, ajudando você a entender como os ativos se movem juntos e quais sinais podem antecipar tendências.
+                Descubra as correlações entre ações e identifique padrões que podem indicar boas oportunidades de investimento. Nossa plataforma permite que você analise o comportamento do mercado em diferentes períodos de tempo, ajudando você a entender como os ativos se movem juntos e quais sinais podem antecipar tendências.
 
-            Use a barra lateral para explorar os dados e melhorar suas estratégias.
+                Use a barra lateral para explorar os dados e melhorar suas estratégias.
 
-        """
+            """
     )
 elif page == "Comparativo":
     st.title("Comparativo")
-    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
+    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data('1d', '1y')
 
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
-
+        
         
         selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
     else:
@@ -72,28 +68,51 @@ elif page == "Comparativo":
     
 elif page == "Gráfico":
     st.title("Gráfico")
+    data_frame_top_15_industry, _, _ = load_data('1d','1y')
+    if isinstance(data_frame_top_15_industry, pd.DataFrame):
+        tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
+        selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="grafico_tickers")
+    else:
+        selected_tickers = []
 
+    start_date = st.date_input("Data Inicial", date(2023, 1, 1))
+    end_date = st.date_input("Data Final", date.today())
+    if selected_tickers:
+        
+        prices = []
+        for ticker in selected_tickers:
+            prices.append(yf.download(ticker, start=start_date, end=end_date)['Close'])
+        df = pd.concat(prices, axis=1)
+        df.columns = selected_tickers
+        st.line_chart(df)
+    else:
+        st.write("Selecione pelo menos um ticker.")
+    
 elif page == "Tabela":
 
     st.title("Tabelas de Dados")
 
     interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d"]
     period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max",]
+
     interval = st.selectbox("Selecione o Intervalo", interval_options, index=8)
     period = st.selectbox("Selecione o Período", period_options, index=5)
 
-    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
+    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data(interval, period)
 
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         if st.button("Atualizar"):
             tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+            
             try:
                 with st.spinner("Atualizando..."):
                     data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
-                    st.success("Atualizado com sucesso!")
-
+                    
                 data_frame_precos_intradiarios = pd.read_csv("src/precos_intradiarios_top_15.csv")
                 tickers_top_15 = data_frame_precos_intradiarios["symbol"].unique().tolist()
+                if not data_frame_precos_intradiarios.empty:
+                  st.success("Atualizado com sucesso!")
+
 
             except Exception as e:
                 st.error(f"Ops, houve um erro ao atualizar: {e}")
@@ -105,3 +124,4 @@ elif page == "Tabela":
     if isinstance(data_frame_precos_intradiarios, pd.DataFrame):
         st.subheader("Preços no período selecionado")
         display_intraday_prices_table(data_frame_precos_intradiarios)
+
