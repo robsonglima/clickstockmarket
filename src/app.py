@@ -87,7 +87,7 @@ def update_data_frames(tickers, interval, period):
         tuple: Uma tupla contendo o DataFrame df_top_15_industry e o
                DataFrame df_precos_intradiarios atualizado.
     """
-    logging.info("Attempting to update data frames...")
+    logging.info("Tentando atualizar os data frames...")
     if not tickers:
         logging.error("Could not retrieve tickers.")
         return None
@@ -95,10 +95,9 @@ def update_data_frames(tickers, interval, period):
 
     if df_precos_intradiarios.empty:
         st.warning("Sem dados retornados para o período selecionado. Por favor, altere a data ou período.")
-    # Save the updated df_precos_intradiarios to the CSV file
-    df_precos_intradiarios.to_csv("src/precos_intradiarios_top_15.csv", index=False)
+  
 
-    logging.info("Data frames updated successfully.")
+    logging.info("Data frames atualizados com sucesso.")
     return df_precos_intradiarios
 
     
@@ -115,7 +114,6 @@ def display_top_15_table(df):
         st.error("DataFrame vazio")
         logging.error("DataFrame vazio")
 
-
 def display_intraday_prices_table(df):
     """Exibe a tabela de preços intradiários."""
     logging.info("Displaying intraday prices table...")
@@ -127,7 +125,6 @@ def display_intraday_prices_table(df):
     else: #se o dataframe for vazio
         st.error("Dataframe vazio")
         logging.error("Dataframe vazio")
-
 
 def show_comparative_graph(selected_tickers, start_date, end_date):
     """
@@ -141,11 +138,7 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
     if not selected_tickers:
         return
     
-    # Adiciona o disclaime dos precos normalizados
-    st.write('Disclaimer: Este gráfico exibe os preços normalizados das ações selecionadas. A normalização permite comparar o desempenho relativo de diferentes ativos, ajustando seus preços para começar em 100 no início do período. Um valor acima de 100 indica valorização, enquanto abaixo de 100 indica desvalorização. Esta metodologia facilita a visualização da trajetória dos ativos, independentemente de seus preços iniciais.')
-
     tickers_for_comparison = [t for t in selected_tickers if t != "BOVA11.SA"]
-
     if len(tickers_for_comparison) > 1:
         # Adiciona o disclaime dos precos normalizados
         st.write('Disclaimer: Este gráfico exibe os preços normalizados das ações selecionadas. A normalização permite comparar o desempenho relativo de diferentes ativos, ajustando seus preços para começar em 100 no início do período. Um valor acima de 100 indica valorização, enquanto abaixo de 100 indica desvalorização. Esta metodologia facilita a visualização da trajetória dos ativos, independentemente de seus preços iniciais.')
@@ -180,7 +173,6 @@ def show_comparative_graph(selected_tickers, start_date, end_date):
             show_company_info(company_data, "BOVA11.SA")
         st.write("Selecione dois ou mais tickers para comparar")
 
-    
 def analyze_trend_initiation(selected_tickers, start_date, end_date):
     """Analisa o início de tendências de alta e baixa para os tickers selecionados.
 
