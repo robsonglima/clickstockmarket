@@ -1,17 +1,16 @@
 import streamlit as st
 from app import *
-from src.analitics import analyze_trend_initiation, get_company_data, load_data
-import pandas as pd
-from datetime import date
+from analitics import analyze_trend_initiation, get_company_data, load_data
 
-st.set_page_config(layout="wide")  # set the app in full screan
+st.sidebar.title("Menu")
 
-
+#Function to format the number
 def format_number(number):
-    if isinstance(number, float):        
+    if isinstance(number, float):
         return "{:.2f}".format(number)
     return number
 
+#Create the sidebar to navigate between pages.
 page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
 
 end_date = date.today()
@@ -26,38 +25,38 @@ if page == "Principal":
             Use a barra lateral para explorar os dados e melhorar suas estratégias.
            
             """
-                )    
+                )
 
     # Create the buttons in 3 colums
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("Comparativo", key='comparativo'):            
+        if st.button("Comparativo", key='comparativo'):
             st.session_state.page = "Comparativo"
             st.rerun()
 
     with col2:
         if st.button("Gráfico", key='grafico'):
             st.session_state.page = "Gráfico"
-            st.rerun()
+            st.rerun()           
     with col3:
         if st.button("Tabela", key='tabela'):
-            page = "Tabela"
+            st.session_state.page = "Tabela"
+            st.rerun()
             
-
 elif page == "Comparativo":
     st.title("Comparativo")
     data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data('1d', '1y')
 
-    if isinstance(data_frame_top_15_industry, pd.DataFrame):        
+    if isinstance(data_frame_top_15_industry, pd.DataFrame):
         tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
         selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
     else:
         selected_tickers = []
 
-    start_date = st.date_input("Data Inicial", date(2023, 1, 1))
+    start_date = st.date_input("Data Inicial", date(2023, 1, 1)) #Date to start the graphic and info.
 
-    company_data_list = []   
+    company_data_list = []
 
     if selected_tickers:
         show_comparative_graph(selected_tickers, start_date, end_date)
@@ -123,7 +122,7 @@ elif page == "Tabela":
             tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
             try:
                 with st.spinner("Atualizando..."):
-                    data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)                    
+                    data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
                 data_frame_precos_intradiarios = pd.read_csv("src/precos_intradiarios_top_15.csv")
                 tickers_top_15 = data_frame_precos_intradiarios["symbol"].unique().tolist()
             except Exception as e:
@@ -136,4 +135,5 @@ elif page == "Tabela":
     if isinstance(data_frame_precos_intradiarios, pd.DataFrame):
         st.subheader("Preços no período selecionado")
         display_intraday_prices_table(data_frame_precos_intradiarios)
+
 
