@@ -1,14 +1,14 @@
 import streamlit as st
-from src.app import *
+from app import *
 from src.analitics import analyze_trend_initiation, get_company_data, load_data
 import pandas as pd
 from datetime import date
-import yfinance as yf
 
-st.set_page_config(layout="wide") #set the app in full screan
+st.set_page_config(layout="wide")  # set the app in full screan
+
 
 def format_number(number):
-    if isinstance(number, float):
+    if isinstance(number, float):        
         return "{:.2f}".format(number)
     return number
 
@@ -16,8 +16,8 @@ page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico"
 
 end_date = date.today()
 
-if page == "Principal":    
-    st.title("Análise de Ações")    
+if page == "Principal":
+    st.title("Análise de Ações")
     st.markdown("""
             Bem-vindo ao Análise de Ações!
 
@@ -26,21 +26,20 @@ if page == "Principal":
             Use a barra lateral para explorar os dados e melhorar suas estratégias.
            
             """
-                )
+                )    
 
-    #Create the buttons in 3 colums
+    # Create the buttons in 3 colums
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("Comparativo", key='comparativo'):
-            page = "Comparativo"            
-            
+        if st.button("Comparativo", key='comparativo'):            
+            st.session_state.page = "Comparativo"
+            st.rerun()
 
     with col2:
         if st.button("Gráfico", key='grafico'):
-            page = "Gráfico"
-            
-
+            st.session_state.page = "Gráfico"
+            st.rerun()
     with col3:
         if st.button("Tabela", key='tabela'):
             page = "Tabela"
@@ -50,15 +49,15 @@ elif page == "Comparativo":
     st.title("Comparativo")
     data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data('1d', '1y')
 
-    if isinstance(data_frame_top_15_industry, pd.DataFrame):
-        tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()    
+    if isinstance(data_frame_top_15_industry, pd.DataFrame):        
+        tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
         selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
     else:
         selected_tickers = []
 
     start_date = st.date_input("Data Inicial", date(2023, 1, 1))
 
-    company_data_list = []
+    company_data_list = []   
 
     if selected_tickers:
         show_comparative_graph(selected_tickers, start_date, end_date)
@@ -83,9 +82,9 @@ elif page == "Comparativo":
         else:
             st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
         
-    
+
 elif page == "Gráfico":
-    st.title("Gráfico de Ações")    
+    st.title("Gráfico de Ações")
 
     interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d"]
     period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
@@ -105,8 +104,8 @@ elif page == "Gráfico":
         else:
             st.write("Selecione pelo menos um ticker para exibir o gráfico.")
     else:
-        st.write("Não foi possível carregar os dados dos tickers.")        
-    
+        st.write("Não foi possível carregar os dados dos tickers.")
+
 elif page == "Tabela":
 
     st.title("Tabelas de Dados")
@@ -124,13 +123,12 @@ elif page == "Tabela":
             tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
             try:
                 with st.spinner("Atualizando..."):
-                    data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
+                    data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)                    
                 data_frame_precos_intradiarios = pd.read_csv("src/precos_intradiarios_top_15.csv")
-                tickers_top_15 = data_frame_precos_intradiarios["symbol"].unique().tolist()                
+                tickers_top_15 = data_frame_precos_intradiarios["symbol"].unique().tolist()
             except Exception as e:
                 st.error(f"Ops, houve um erro ao atualizar: {e}")
-        
-
+    
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         st.subheader("Top 15 Empresas Listadas")
         display_top_15_table(data_frame_top_15_industry)
