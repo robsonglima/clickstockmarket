@@ -114,9 +114,10 @@ elif page == "Comparativo":
 elif page == "Gráfico":
     st.title("Análise do Gráfico")
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
-    if isinstance(data_frame_top_15_industry, pd.DataFrame):
-        stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios, data_frame_top_15_industry['TckrSymb'].tolist())
-        display_cards(stats)
+    
+    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+    stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15)
+    display_cards(stats)
 
 elif page == "Tabela":
 
