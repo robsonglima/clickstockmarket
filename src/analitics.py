@@ -103,9 +103,10 @@ def get_company_data(ticker, start_date, end_date):
         logging.error(f"Error fetching data for {ticker}: {e}")
         return {"profile": "N/A", "market": "N/A", "volume": "N/A", "history": pd.DataFrame()}
 
+
 def analyze_trend_initiation(tickers, start_date, end_date):
     """
-    Analyses the initiation of upward and downward trends for given tickers.
+    Analyzes the initiation of upward and downward trends for a list of stock tickers.
 
     Args:
         tickers (list): List of stock tickers.
@@ -113,29 +114,33 @@ def analyze_trend_initiation(tickers, start_date, end_date):
         end_date (date): End date for the analysis.
 
     Returns:
-        tuple: A tuple containing two dictionaries, one for downward trends and one for upward trends.
+        tuple: Two dictionaries, one for downward trends and one for upward trends.
+               Each dictionary contains ticker symbols as keys and the trend initiation
+               time as values.
     """
     downward_trends = {}
     upward_trends = {}
-    
+    window_size = 3
     for ticker in tickers:
-        company = yf.Ticker(ticker)
-        history = company.history(start=start_date, end=end_date)
-        
-        if len(history) >= 2:
-            
-            if history['Close'].iloc[0] > history['Close'].iloc[1]:
-                
-                downward_trends[ticker] = history.index[1].strftime('%Y-%m-%d')
-            
-            elif history['Close'].iloc[0] < history['Close'].iloc[1]:
-                
-                upward_trends[ticker] = history.index[1].strftime('%Y-%m-%d')
-            else:
-                continue
-    
+        try:
+            ticker_data = yf.download(ticker, start=start_date, end=end_date)
+            if not ticker_data.empty and len(ticker_data) >= window_size:
+                data = ticker_data['Close']
+                for i in range(window_size - 1, len(data)):
+                    # Check for downward trend
+                    if all(data[j] > data[j+1] for j in range(i - window_size + 1, i)):
+                        if ticker not in downward_trends:
+                            downward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                            break 
+                    # Check for upward trend
+                    elif all(data[j] < data[j+1] for j in range(i - window_size + 1, i)):
+                        if ticker not in upward_trends:
+                            upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                            break
+        except Exception as e:
+            logging.error(f"Error analyzing trends for {ticker}: {e}")
     return downward_trends, upward_trends
-
+    
 if __name__ == "__main__":
     # Main execution block
     df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')

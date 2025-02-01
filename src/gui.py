@@ -1,12 +1,10 @@
 import streamlit as st
 from app import *
-
+from typing import List
 from analitics import analyze_trend_initiation
-from analitics import get_company_data
+from analitics import get_company_data, update_data_frames
 import pandas as pd
 from datetime import date
-
-from typing import List
 
 st.sidebar.title("Menu")
 
@@ -27,7 +25,6 @@ def display_cards(stats: List[float] | None) -> None:
         stats: A list containing the statistical data, or None if no data is available.
     """
     if stats is None:
-        print('Stats are none')
         return
 
     card_data = [
@@ -44,16 +41,25 @@ def display_cards(stats: List[float] | None) -> None:
 
     card_html = '<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">'
     for item in card_data:
-        change_type_class = 'bg-emerald-100 text-emerald-800 ring-emerald-600/10 dark:bg-emerald-400/10 dark:text-emerald-500 dark:ring-emerald-400/20' if item['changeType'] == 'positive' else 'bg-red-100 text-red-800 ring-red-600/10 dark:bg-red-400/10 dark:text-red-500 dark:ring-red-400/20' if item['changeType'] == 'negative' else 'bg-gray-100 text-gray-800 ring-gray-600/10 dark:bg-gray-400/10 dark:text-gray-500 dark:ring-gray-400/20'
-        card_html += f'<div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"><div class="flex items-center justify-between"><dt class="truncate text-sm font-medium text-gray-500">{item["name"]}</dt><dd class="ml-2 flex items-baseline"><span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {change_type_class}">{item["change"]}</span></dd></div><div class="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6"><dd class="text-3xl font-semibold text-gray-900">{item["stat"]}</dd></div></div>'
+        change_type_class = {
+            'positive': 'bg-green-200 text-green-800',
+            'negative': 'bg-red-200 text-red-800',
+            'neutral': 'bg-gray-200 text-gray-800'
+        }.get(item['changeType'], 'bg-gray-200 text-gray-800')
+        card_html += f"""<div class="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between"><h3 class="text-lg font-bold text-gray-800 mb-1">{item['name']}</h3><p class="text-gray-600 text-sm mb-4">{item['description']}</p><div class="text-4xl font-extrabold text-blue-600 mb-4">{item['stat']}</div><div class="flex items-center"><span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {change_type_class}">{item['change']}</span></div></div>"""
+    
     card_html += '</div>'
-    st.markdown(card_html, unsafe_allow_html=True)  
+    st.markdown(card_html, unsafe_allow_html=True)
 
 def load_data_no_tickers():
-    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data()
+    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data(interval='1d', period='1y')
     return data_frame_top_15_industry, data_frame_precos_intradiarios
     
 page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
+
+
+end_date = date.today()
+
 
 if page == "Principal":
 
@@ -68,34 +74,32 @@ if page == "Principal":
 
         """
         )
-    if st.button("Recarregar Principal"):
-        
-        st.rerun()
+
+    
 elif page == "Comparativo":
     st.title("Comparativo")
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
-    
+
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
+        
+        
         selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
     else:
         selected_tickers = []
 
     start_date = st.date_input("Data Inicial", date(2023, 1, 1))
-    end_date = st.date_input("Data Final", date.today())
 
     company_data_list = []
+
     if selected_tickers:
-        show_comparative_graph(selected_tickers, start_date, end_date)
-        stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
-        display_cards(stats)
-        for ticker in selected_tickers:
-            company_data = get_company_data(ticker, start_date, end_date)
-            company_data_list.append(company_data)
+        
+        show_comparative_graph(selected_tickers, start_date, end_date)       
 
         for ticker, company_data in zip(selected_tickers, company_data_list):
             show_company_info(company_data, ticker)
-    
+        for ticker in selected_tickers:
+            company_data = get_company_data(ticker, start_date, end_date)
     
         downward_trends, upward_trends = analyze_trend_initiation(selected_tickers, start_date, end_date)
 
@@ -111,12 +115,13 @@ elif page == "Comparativo":
         else:
             st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
         
+    
+
 elif page == "Gráfico":
     st.title("Análise do Gráfico")
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
-    
-    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
-    stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15)
+
+    stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,data_frame_top_15_industry['TckrSymb'].tolist())
     display_cards(stats)
 
 elif page == "Tabela":
