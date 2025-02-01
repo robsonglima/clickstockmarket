@@ -1,6 +1,6 @@
 import streamlit as st
 from app import *
-from analitics import analyze_trend_initiation, get_company_data, load_data, update_data_frames, show_graph_selected_tickers
+from analitics import analyze_trend_initiation, get_company_data, load_data, update_data_frames
 
 st.sidebar.title("Menu")
 
