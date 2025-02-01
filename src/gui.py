@@ -1,11 +1,11 @@
 import streamlit as st
-from app import *
-from analitics import analyze_trend_initiation, get_company_data, load_data
+from src.app import *
+from src.analitics import analyze_trend_initiation, get_company_data, load_data
 import pandas as pd
 from datetime import date
 import yfinance as yf
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide") #set the app in full screan
 
 def format_number(number):
     if isinstance(number, float):
@@ -28,22 +28,23 @@ if page == "Principal":
             """
                 )
 
+    #Create the buttons in 3 colums
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("Comparativo"):
-            st.session_state.page = "Comparativo"
-            st.rerun()
+        if st.button("Comparativo", key='comparativo'):
+            page = "Comparativo"            
+            
 
     with col2:
-        if st.button("Gráfico"):
-            st.session_state.page = "Gráfico"
-            st.rerun()
+        if st.button("Gráfico", key='grafico'):
+            page = "Gráfico"
+            
 
     with col3:
-        if st.button("Tabela"):
-            st.session_state.page = "Tabela"
-            st.rerun()
+        if st.button("Tabela", key='tabela'):
+            page = "Tabela"
+            
 
 elif page == "Comparativo":
     st.title("Comparativo")
