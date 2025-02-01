@@ -5,11 +5,8 @@ import pandas as pd
 from datetime import date, datetime
 import yfinance as yf
 
-
-page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
-
 st.sidebar.title("Menu")
-
+page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
 
 end_date = date.today()
 
