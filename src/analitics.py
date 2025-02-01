@@ -19,6 +19,7 @@ OUTPUT_DIR = "src"
 # Create the output directory if it doesn't exist
 if not os.path.exists(OUTPUT_DIR):
 
+    os.makedirs(OUTPUT_DIR)
 OUTPUT_FILE_INDUSTRY = os.path.join(OUTPUT_DIR, "df_top_15_com_industry.csv")
 OUTPUT_FILE_INTRADAY = os.path.join(OUTPUT_DIR, "precos_intradiarios_top_15.csv")
 
@@ -58,7 +59,7 @@ def preencher_industry(df):
     df['Industry'] = industries
     return df
 
-def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
+def consultar_precos_intradiarios_yf(tickers, interval, period):
     """Fetches intraday price data for a list of tickers."""
     precos = []
     for ticker in tickers:
@@ -115,16 +116,66 @@ def analyze_trend_initiation(tickers, start_date, end_date):
     """
     downward_trends = {}
     upward_trends = {}
-    window_size = 3
     for ticker in tickers:
         try:
             ticker_data = yf.download(ticker, start=start_date, end=end_date)
-            if not ticker_data.empty and len(ticker_data) >= window_size:
+            if not ticker_data.empty:
+                # Implement logic to detect trend initiation
+                # Example: check for a series of consecutive decreases or increases
                 data = ticker_data['Close']
-                for i in range(window_size - 1, len(data)):
-                    # Check for downward trend
-                    if all(data[j] > data[j+1] for j in range(i - window_size + 1, i)):
-                        if ticker not in downward_trends:
+                for i in range(1, min(len(data), 4)): # Iterate only the first 3 lines
+                    if data[i] < data[i - 1]:
+                        # Check for a series of decreases to consider it a trend
+                        consecutive_decreases = all(data[j] < data[j-1] for j in range(i, max(0, i-3),-1))
+
+                        if consecutive_decreases and ticker not in downward_trends:
+                            downward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                            break # Stop when one trend is found
+                    elif data[i] > data[i - 1]:
+                        # Check for a series of increases to consider it a trend
+                        consecutive_increases = all(data[j] > data[j-1] for j in range(i, max(0, i-3),-1))
+                        if consecutive_increases and ticker not in upward_trends:
+                            upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                            break # Stop when one trend is found
+        except Exception as e:
+            logging.error(f"Error analyzing trends for {ticker}: {e}")
+    return downward_trends, upward_trends
+
+
+def load_data(interval = "1d", period="1y"):
+    """
+    Load the data
+    """
+    logging.info(f"Loading data with interval {interval} and period {period}")
+
+    try:
+        data_frame_top_15_industry = pd.read_csv("src/df_top_15_com_industry.csv", sep=";")
+        data_frame_precos_intradiarios = pd.read_csv("src/precos_intradiarios_top_15.csv")
+    except Exception as e:
+        logging.error(f"Error loading data: {e}")
+        df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')
+
+        if df is not None:
+            df['TckrSymb'] = df['TckrSymb'] + '.SA'
+            df_filtrado_segmento = df[df['SgmtNm'].str.contains('CASH', na=False)]
+            data_frame_top_15_industry = df_filtrado_segmento.nlargest(TOP_N, 'TradQty')
+            data_frame_top_15_industry = preencher_industry(data_frame_top_15_industry)
+            data_frame_top_15_industry.to_csv(OUTPUT_FILE_INDUSTRY, index=False, sep=";")
+    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()        
+    data_frame_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15,interval, period)
+    
+    industry_mapping = data_frame_top_15_industry.set_index('TckrSymb')['Industry'].to_dict()
+    data_frame_precos_intradiarios['Industry'] = data_frame_precos_intradiarios['symbol'].map(industry_mapping)
+    data_frame_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)
+    logging.info("Data load with sucefull.")
+    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+
+    return data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15
+        
+
+                    
+                   
+                        if ticker not in downward_trends:   
                             downward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
                             break 
                     # Check for upward trend
@@ -132,7 +183,6 @@ def analyze_trend_initiation(tickers, start_date, end_date):
                         if ticker not in upward_trends:
                             upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
                             break
-        except Exception as e: 
-            logging.error(f"Error analyzing trends for {ticker}: {e}")
-    return downward_trends, upward_trends
+    
 
+    

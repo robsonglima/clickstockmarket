@@ -1,19 +1,15 @@
 import streamlit as st
 from app import *
-
 from analitics import analyze_trend_initiation, get_company_data
 import pandas as pd
 from datetime import date
+from app import display_intraday_prices_table, display_top_15_table, load_data
+from app import show_company_info, show_comparative_graph, update_data_frames
 
 st.sidebar.title("Menu")
 
-from app import display_intraday_prices_table, display_top_15_table, load_data
-from app import show_company_info, show_comparative_graph, update_data_frames
-from analitics import analyze_trend_initiation, get_company_data
-
 def load_data_no_tickers():
-    """Load the data without tickers."""
-    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data(interval='1d', period='1y')
+    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data('1d', '1y')
     return data_frame_top_15_industry, data_frame_precos_intradiarios
     
 page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
@@ -21,8 +17,7 @@ page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico"
 
 end_date = date.today()
 
-    
-if page == "Principal":
+if page == "Principal":    
 
     st.title("Análise de Ações")
     st.markdown(
@@ -34,7 +29,7 @@ if page == "Principal":
             Use a barra lateral para explorar os dados e melhorar suas estratégias.
 
         """
-    )    
+    )
 elif page == "Comparativo":
     st.title("Comparativo")
     data_frame_top_15_industry, data_frame_precos_intradiarios = load_data_no_tickers()
@@ -52,8 +47,7 @@ elif page == "Comparativo":
     company_data_list = []
 
     if selected_tickers:
-        
-        show_comparative_graph(selected_tickers, start_date, end_date)       
+        show_comparative_graph(selected_tickers, start_date, end_date)
 
         for ticker in selected_tickers:
             company_data = get_company_data(ticker, start_date, end_date)
@@ -75,7 +69,7 @@ elif page == "Comparativo":
         else:
             st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
         
-
+    
 elif page == "Gráfico":
     st.title("Gráfico")
 
@@ -103,7 +97,7 @@ elif page == "Tabela":
 
             except Exception as e:
                 st.error(f"Ops, houve um erro ao atualizar: {e}")
-    
+
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         st.subheader("Top 15 Empresas Listadas")
         display_top_15_table(data_frame_top_15_industry)
