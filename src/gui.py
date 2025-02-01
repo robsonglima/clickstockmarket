@@ -1,6 +1,6 @@
 import streamlit as st
 from app import *
-from analitics import analyze_trend_initiation, get_company_data, load_data, show_graph_selected_tickers
+from analitics import consultar_precos_intradiarios_yf, preencher_industry
 
 st.sidebar.title("Menu")
 
@@ -43,13 +43,13 @@ if st.session_state.page == "Principal":
 
 elif st.session_state.page == "Comparativo":
     st.title("Comparativo")
-    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data('1d', '1y')
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data('1d', '1y')
 
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
         selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
     else:
-        selected_tickers = []
+      selected_tickers = []
 
     from datetime import date
     start_date = st.date_input("Data Inicial", date(2023, 1, 1))
@@ -83,14 +83,14 @@ elif st.session_state.page == "Comparativo":
 elif st.session_state.page == "Gráfico":
     st.title("Gráfico de Ações")
 
-    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data()
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data()
 
     interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d"]
     period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
 
     interval = st.selectbox("Selecione o Intervalo", interval_options, index=8)
 
-    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data(interval, period)
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data(interval, period)
 
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
@@ -114,7 +114,7 @@ elif st.session_state.page == "Tabela":
     interval = st.selectbox("Selecione o Intervalo", interval_options, index=8)
     period = st.selectbox("Selecione o Período", period_options, index=5)
 
-    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data(interval, period)
+    data_frame_top_15_industry, data_frame_precos_intradiarios = load_data(interval, period)
    
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         st.subheader("Top 15 Empresas Listadas")
