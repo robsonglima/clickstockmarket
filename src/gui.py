@@ -9,7 +9,7 @@ from typing import List
 
 st.sidebar.title("Menu")
 
-def display_cards(stats):
+ #def display_cards(stats):
     """
     Exibe três cards com estatísticas.
 
