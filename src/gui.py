@@ -71,7 +71,6 @@ elif page == "Gráfico":
     st.title("Análise do Gráfico")
     data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
     stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
-    display_cards(stats)    
 
 
 elif page == "Tabela":
