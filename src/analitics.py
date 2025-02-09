@@ -135,6 +135,11 @@ def get_company_data(ticker: str, start_date: date, end_date: date) :
         logging.error(f"Error fetching data for {ticker}: {e}")
         return {"profile": "N/A", "market": "N/A", "volume": "N/A", "history": pd.DataFrame()}
 
+def get_all_tickers(df: pd.DataFrame):
+    """Returns a list of all tickers in the DataFrame."""
+    tickers = df['TckrSymb'].tolist()
+    return tickers
+
 if __name__ == "__main__":
     # Main execution block
     df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip', cache_file='temp_cached_b3.csv')

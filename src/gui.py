@@ -2,7 +2,7 @@ import streamlit as st
 from app import *
 
 from analitics import get_company_data
-import pandas as pd
+from analitics import get_all_tickers, get_correlation, load_data as load_data_from_analitics
 from datetime import date
 
 from typing import List
@@ -29,7 +29,7 @@ if page == "Principal":
         
         st.rerun()    
 elif page == "Comparativo":
-    st.title("Comparativo")
+    st.title("Comparativo entre ações")
     data_frame_top_15_industry, _, _ = load_data()
     
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
@@ -73,6 +73,26 @@ elif page == "Correlação":
         Nesta seção, é possível analisar a correlação entre diferentes ações, ajudando a identificar padrões de movimento conjunto que podem ser cruciais para estratégias de investimento
         """
     )
+
+    all_tickers = get_all_tickers()
+    if all_tickers:
+        selected_tickers = st.multiselect(
+            "Selecione os Tickers", all_tickers
+        )
+
+        start_date = st.date_input("Data Inicial", date(2023, 1, 1))
+        end_date = st.date_input("Data Final", date.today())
+
+        if st.button("Gerar Correlação"):
+                if selected_tickers:
+                    correlation_matrix = get_correlation(selected_tickers, start_date, end_date)
+                    if correlation_matrix is not None:
+                      st.write("Matriz de Correlação:")
+                      st.dataframe(correlation_matrix)
+                    else:
+                      st.error("Erro ao gerar a matriz de correlação.")
+                else:
+                    st.error("Selecione ao menos duas ações para gerar a correlação.")
 
         
 elif page == "Gráfico":
