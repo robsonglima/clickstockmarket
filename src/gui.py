@@ -2,7 +2,7 @@ import streamlit as st
 from app import *
 
 from analitics import get_company_data
-from analitics import get_all_tickers, df_total_b3
+from analitics import get_all_tickers, load_data
 from datetime import date
 
 from typing import List
@@ -30,7 +30,7 @@ if page == "Principal":
         st.rerun()    
 elif page == "Comparativo":
     st.title("Comparativo entre ações")
-    data_frame_top_15_industry, _, _ = df_total_b3()
+    data_frame_top_15_industry, _, _ = load_data()
     
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
@@ -98,7 +98,7 @@ elif page == "Correlação":
         
 elif page == "Gráfico":
     st.title("Análise do Gráfico")
-    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = df_total_b3()
+    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
     stats = run_app(data_frame_top_15_industry, data_frame_precos_intradiarios,tickers_top_15)
 
 
@@ -111,7 +111,7 @@ elif page == "Tabela":
     interval = st.selectbox("Selecione o Intervalo", interval_options, index=8)
     period = st.selectbox("Selecione o Período", period_options, index=5)
 
-    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = df_total_b3()
+    data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
 
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         if st.button("Atualizar"):
