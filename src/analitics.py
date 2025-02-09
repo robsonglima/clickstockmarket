@@ -113,19 +113,27 @@ def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
                 logging.error(f"Error fetching data for {ticker}: {e}")
     return pd.concat(precos, ignore_index=True) if precos else pd.DataFrame(), ""
 
-def get_company_data(ticker: str, start_date: date, end_date: date):
+def get_company_data(ticker: str, start_date: date, end_date: date) :
     """
     Gets company data from Yahoo Finance.
     Args:
         ticker: str
         start_date: date 
         end_date: date 
-    
-        
+    """    
+    try:
+        company = yf.Ticker(ticker)
+        info = company.info
+        history = company.history(start=start_date, end=end_date)
+        if isinstance(history, pd.DataFrame) and not history.empty:
+                volume = history.iloc[-1]['Volume']
+        else:
+                volume = 'N/A'
+
+        return {"profile": info.get("longBusinessSummary", "N/A"), "market": info.get("market", "N/A"), "volume": volume, "history": history}
     except Exception as e:
         logging.error(f"Error fetching data for {ticker}: {e}")
         return {"profile": "N/A", "market": "N/A", "volume": "N/A", "history": pd.DataFrame()}
-    """    
 
 if __name__ == "__main__":
     # Main execution block
@@ -155,7 +163,7 @@ if __name__ == "__main__":
             # For now, let's continue processing even with the warning       
         
         #adicionando info de mercado (industry) no df_precos_intradiarios
-        industry_mapping = df_atualizado.set_index('TckrSymb')['Industry'].to_dict()
+        industry_mapping = df_atualizado.set_index('TckrSymb')['Industry'].to_dict()    
         df_precos_intradiarios['Industry'] = df_precos_intradiarios['symbol'].map(industry_mapping)   
         
         #Adicionanod industry no df_precos
