@@ -10,7 +10,7 @@ from typing import List
 st.sidebar.title("Menu")
 
 
-page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
+page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Correlação", "Gráfico", "Tabela"])
 
 if page == "Principal":
 
@@ -65,6 +65,14 @@ elif page == "Comparativo":
                 st.write(f"**Primeira Tendência de Alta Iniciada:** {ticker} em {trend_time}")
         else:
               st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
+
+elif page == "Correlação":
+    st.title("Correlação entre ações")
+    st.markdown(
+        """
+        Nesta seção, é possível analisar a correlação entre diferentes ações, ajudando a identificar padrões de movimento conjunto que podem ser cruciais para estratégias de investimento
+        """
+    )
 
         
 elif page == "Gráfico":
