@@ -1,7 +1,6 @@
 
 import pandas as pd
 import yfinance as yf
-import io
 import requests
 import logging
 import time
@@ -12,12 +11,9 @@ from datetime import date
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Constants
 GITHUB_CSV_URL = "https://github.com/robsonglima/StockMarket_B3/blob/5c7977ff8b2f087ce8232a937cc39855d4adbed9/TradeInformationConsolidatedFile_20250127_1.csv?raw=true"
-TOP_N = 15
 CSV_ENCODING = 'latin1'
 OUTPUT_DIR = "src"
-
 # Create the output directory if it doesn't exist
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
@@ -25,9 +21,34 @@ if not os.path.exists(OUTPUT_DIR):
 OUTPUT_FILE_INDUSTRY = os.path.join(OUTPUT_DIR, "df_top_15_com_industry.csv")
 OUTPUT_FILE_INTRADAY = os.path.join(OUTPUT_DIR, "precos_intradiarios_top_15.csv")
 
+df_total_b3 = load_data()
+
+
+
+
+
+def load_data():
+    """Loads the CSV data, adds '.SA' to the 'TckrSymb' column, and fills in the 'Industry' column."""
+    logging.info("Loading data...")
+    df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')
+
+    if df is not None:
+        # Add .SA to ticker symbols
+        logging.info("Adding '.SA' to ticker symbols...")
+        df['TckrSymb'] = df['TckrSymb'] + '.SA'
+
+        # Fill in industry information
+        logging.info("Filling in industry information...")
+        df_total_b3 = preencher_industry(df)
+        logging.info("Data loaded and processed successfully.")
+        return df_total_b3
+    else:
+        logging.error("Failed to load data.")
+        return None
 
 def download_and_load_csv(url, delimiter, encoding, header, bad_lines_action, cache_file="temp_cached.csv"):
-    """Downloads a CSV from a URL, caches it locally, and loads it into a Pandas DataFrame.
+    """
+    Downloads a CSV from a URL, caches it locally, and loads it into a Pandas DataFrame.
     
     Args:
         url (str): The URL of the CSV file.
@@ -43,12 +64,15 @@ def download_and_load_csv(url, delimiter, encoding, header, bad_lines_action, ca
             return pd.read_csv(cache_file, delimiter=delimiter, encoding=encoding, header=header, on_bad_lines=bad_lines_action)
         except pd.errors.ParserError as e:
             logging.error(f"Error parsing cached CSV: {e}. Attempting to download fresh copy.")
-
+    else:
         response = requests.get(url, stream=True)
-        for chunk in response.iter_content(chunk_size=8192):
-            file.write(chunk)
-        logging.info(f"CSV downloaded and cached to {cache_file}")
-        logging.error(f"Error downloading or parsing CSV: {e}")
+        if response.status_code == 200:
+            with open(cache_file, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    file.write(chunk)
+            logging.info(f"CSV downloaded and cached to {cache_file}")
+            return pd.read_csv(cache_file, delimiter=delimiter, encoding=encoding, header=header, on_bad_lines=bad_lines_action)
+        logging.error(f"Error downloading or parsing CSV:")
         return None
 
 def preencher_industry(df):
@@ -64,13 +88,8 @@ def preencher_industry(df):
         except Exception as e:
             logging.error(f"Error fetching industry for {ticker}: {e}")
             industries.append("Erro")
-
-    
-
-
-
     df['Industry'] = industries
-    return df
+    return df    
 
 def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
     """Fetches intraday price data for a list of tickers."""
@@ -113,13 +132,13 @@ def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
                 logging.error(f"Error fetching data for {ticker}: {e}")
     return pd.concat(precos, ignore_index=True) if precos else pd.DataFrame(), ""
 
-def get_company_data(ticker: str, start_date: date, end_date: date) :
+def get_company_data(ticker: str, start_date: date, end_date: date):
     """
     Gets company data from Yahoo Finance.
     Args:
         ticker: str
-        start_date: date 
-        end_date: date 
+        start_date: date
+        end_date: date
     """    
     try:
         company = yf.Ticker(ticker)
@@ -136,51 +155,6 @@ def get_company_data(ticker: str, start_date: date, end_date: date) :
         return {"profile": "N/A", "market": "N/A", "volume": "N/A", "history": pd.DataFrame()}
 
 def get_all_tickers(df: pd.DataFrame):
-    """Returns a list of all tickers in the DataFrame."""
+    """Returns a list of all tickers in the df_total_b3."""
     tickers = df['TckrSymb'].tolist()
     return tickers
-
-if __name__ == "__main__":
-    # Main execution block
-    df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip', cache_file='temp_cached_b3.csv')
-
-    if df is not None:
-        #Incluindo .SA no TRacker para consultar no Yahoo Finance
-        df['TckrSymb'] = df['TckrSymb'] + '.SA'
-
-        # adicionando mercado na tabela -  industry 
-        df_atualizado = preencher_industry(df)
-        print(df_atualizado)
-        #Save industry data
-        try:
-            df_atualizado.to_csv(OUTPUT_FILE_INDUSTRY, index=False, sep=";")
-            logging.info(f"{OUTPUT_FILE_INDUSTRY} saved successfully.")
-        except Exception as e:
-            logging.error(f"Error saving {OUTPUT_FILE_INDUSTRY}: {e}")
-
-        # atualziando intraday - precos
-        tickers = df_atualizado['TckrSymb'].tolist()        
-        df_precos_intradiarios, warning_message = consultar_precos_intradiarios_yf(tickers,"1d", "10d")
-
-        if warning_message:
-            logging.warning(warning_message)
-            # Decide whether to proceed or halt based on the warning
-            # For now, let's continue processing even with the warning       
-        
-        #adicionando info de mercado (industry) no df_precos_intradiarios
-        industry_mapping = df_atualizado.set_index('TckrSymb')['Industry'].to_dict()    
-        df_precos_intradiarios['Industry'] = df_precos_intradiarios['symbol'].map(industry_mapping)   
-        
-        #Adicionanod industry no df_precos
-        df_precos = df_precos_intradiarios
-
-
-        print("df_precos_intradiarios")
-        print(df_precos_intradiarios.head())        
-
-        #Salvar o intraday data - mensage somente no log
-        try:
-            df_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)
-            logging.info(f"{OUTPUT_FILE_INTRADAY} saved successfully.")
-        except Exception as e:
-            logging.error(f"Error saving {OUTPUT_FILE_INTRADAY}: {e}")
