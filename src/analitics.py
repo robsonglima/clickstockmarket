@@ -14,6 +14,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 GITHUB_CSV_URL = "https://github.com/robsonglima/StockMarket_B3/blob/5c7977ff8b2f087ce8232a937cc39855d4adbed9/TradeInformationConsolidatedFile_20250127_1.csv?raw=true"
 CSV_ENCODING = 'latin1'
 OUTPUT_DIR = "src"
+df_total_b3 = None
+
 # Create the output directory if it doesn't exist
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
@@ -21,37 +23,33 @@ if not os.path.exists(OUTPUT_DIR):
 OUTPUT_FILE_INDUSTRY = os.path.join(OUTPUT_DIR, "df_top_15_com_industry.csv")
 OUTPUT_FILE_INTRADAY = os.path.join(OUTPUT_DIR, "precos_intradiarios_top_15.csv")
 
-df_total_b3 = load_data()
-
-
-
-
-
 def load_data():
     """Loads the CSV data, adds '.SA' to the 'TckrSymb' column, and fills in the 'Industry' column."""
     logging.info("Loading data...")
-    df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')
+    df_b3 = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 0, 'skip')
 
-    if df is not None:
+    if df_b3 is not None:
         # Add .SA to ticker symbols
         logging.info("Adding '.SA' to ticker symbols...")
-        df['TckrSymb'] = df['TckrSymb'] + '.SA'
+        df_b3['TckrSymb'] = df_b3['TckrSymb'] + '.SA'
 
         # Fill in industry information
         logging.info("Filling in industry information...")
-        df_total_b3 = preencher_industry(df)
+        df_b3 = preencher_industry(df_b3)
         logging.info("Data loaded and processed successfully.")
-        return df_total_b3
+        global df_total_b3
+        df_total_b3 = df_b3
+        return df_b3
     else:
         logging.error("Failed to load data.")
         return None
 
-def download_and_load_csv(url, delimiter, encoding, header, bad_lines_action, cache_file="temp_cached.csv"):
+def download_and_load_csv(url, delimiter, encoding, header, bad_lines_action, cache_file="temp_cached_b3.csv"):
     """
     Downloads a CSV from a URL, caches it locally, and loads it into a Pandas DataFrame.
     
     Args:
-        url (str): The URL of the CSV file.
+        url (str): The URL of the CSV file.    
         delimiter (str): The delimiter used in the CSV.
         encoding (str): The encoding of the CSV file.
         header (int): The row number to use as the header.
@@ -59,21 +57,20 @@ def download_and_load_csv(url, delimiter, encoding, header, bad_lines_action, ca
         cache_file (str): The local file path to cache the downloaded CSV.
     """
     if os.path.exists(cache_file):
-        logging.info(f"Loading CSV from cache: {cache_file}")
-        try:
-            return pd.read_csv(cache_file, delimiter=delimiter, encoding=encoding, header=header, on_bad_lines=bad_lines_action)
-        except pd.errors.ParserError as e:
-            logging.error(f"Error parsing cached CSV: {e}. Attempting to download fresh copy.")
-    else:
-        response = requests.get(url, stream=True)
-        if response.status_code == 200:
-            with open(cache_file, 'wb') as file:
-                for chunk in response.iter_content(chunk_size=8192):
-                    file.write(chunk)
-            logging.info(f"CSV downloaded and cached to {cache_file}")
-            return pd.read_csv(cache_file, delimiter=delimiter, encoding=encoding, header=header, on_bad_lines=bad_lines_action)
-        logging.error(f"Error downloading or parsing CSV:")
-        return None
+            logging.info(f"Loading CSV from cache: {cache_file}")            
+            try:
+                return pd.read_csv(cache_file, delimiter=delimiter, encoding=encoding, header=header, on_bad_lines=bad_lines_action)
+            except pd.errors.ParserError as e:
+                logging.error(f"Error parsing cached CSV: {e}. Attempting to download fresh copy.")
+    response = requests.get(url, stream=True)
+    if response.status_code == 200:
+        with open(cache_file, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+        logging.info(f"CSV downloaded and cached to {cache_file}")
+        return pd.read_csv(cache_file, delimiter=delimiter, encoding=encoding, header=header, on_bad_lines=bad_lines_action)
+    logging.error(f"Error downloading or parsing CSV:")
+    return None
 
 def preencher_industry(df):
     """Fetches and adds 'Industry' information to the DataFrame."""
@@ -141,7 +138,6 @@ def get_company_data(ticker: str, start_date: date, end_date: date):
         end_date: date
     """    
     try:
-        company = yf.Ticker(ticker)
         info = company.info
         history = company.history(start=start_date, end=end_date)
         if isinstance(history, pd.DataFrame) and not history.empty:
@@ -158,3 +154,5 @@ def get_all_tickers(df: pd.DataFrame):
     """Returns a list of all tickers in the df_total_b3."""
     tickers = df['TckrSymb'].tolist()
     return tickers
+
+load_data()
