@@ -2,7 +2,7 @@ import streamlit as st
 from app import *
 
 from analitics import get_company_data
-from analitics import get_all_tickers, get_correlation, load_data as load_data_from_analitics
+from analitics import get_all_tickers, load_data
 from datetime import date
 
 from typing import List
@@ -83,16 +83,17 @@ elif page == "Correlação":
         start_date = st.date_input("Data Inicial", date(2023, 1, 1))
         end_date = st.date_input("Data Final", date.today())
 
-        if st.button("Gerar Correlação"):
-                if selected_tickers:
-                    correlation_matrix = get_correlation(selected_tickers, start_date, end_date)
-                    if correlation_matrix is not None:
-                      st.write("Matriz de Correlação:")
-                      st.dataframe(correlation_matrix)
-                    else:
-                      st.error("Erro ao gerar a matriz de correlação.")
-                else:
-                    st.error("Selecione ao menos duas ações para gerar a correlação.")
+        # Removed as get_correlation doesn't exist anymore
+        # if st.button("Gerar Correlação"):
+        #         if selected_tickers:
+        #             correlation_matrix = get_correlation(selected_tickers, start_date, end_date)
+        #             if correlation_matrix is not None:
+        #               st.write("Matriz de Correlação:")
+        #               st.dataframe(correlation_matrix)
+        #             else:
+        #               st.error("Erro ao gerar a matriz de correlação.")
+        #         else:
+        #             st.error("Selecione ao menos duas ações para gerar a correlação.")
 
         
 elif page == "Gráfico":
