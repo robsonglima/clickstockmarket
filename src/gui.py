@@ -2,7 +2,7 @@ import streamlit as st
 from app import *
 
 from analitics import get_company_data
-from analitics import get_all_tickers, load_data, df_total_b3
+from analitics import get_all_tickers, load_data
 from datetime import date
 
 from typing import List
@@ -99,7 +99,7 @@ elif page == "Correlação":
 elif page == "Gráfico":
     st.title("Análise do Gráfico")
     data_frame_top_15_industry = load_data()
-    stats = run_app(data_frame_top_15_industry, df_total_b3)
+    stats = run_app(data_frame_top_15_industry)
 
 
 elif page == "Tabela":
