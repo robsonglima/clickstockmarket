@@ -74,7 +74,7 @@ elif page == "Correlação":
         """
     )
 
-    all_tickers = get_all_tickers()
+    all_tickers = get_all_tickers(load_data())
     if all_tickers:
         selected_tickers = st.multiselect(
             "Selecione os Tickers", all_tickers
