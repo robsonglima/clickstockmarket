@@ -33,7 +33,7 @@ elif page == "Comparativo":
     data_frame_top_15_industry = load_data()
     
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
-        tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
+        tickers_list = data_frame_top_15_industry['CD_TICKER'].tolist()
         selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
     else:
         selected_tickers = []
@@ -52,16 +52,16 @@ elif page == "Comparativo":
             show_company_info(company_data, ticker)
     
     
-        downward_trends, upward_trends = analyze_trend_initiation(selected_tickers, start_date, end_date)
+        downward_trends, upward_trends = analyze_trend_initiation(selected_tickers, start_date, end_date) 
 
-        if downward_trend:
+        if downward_trends:
               for ticker, trend_time in downward_trends.items():
                 st.write(f"**Primeira Tendência de Baixa Iniciada:** {ticker} em {trend_time}")
         else:
                 st.write(f"**Primeira Tendência de Baixa Iniciada:** Sem tendências detectadas.")
 
-        if upward_trend:
-              for ticker, trend_time in upward_trend.items():
+        if upward_trends:
+              for ticker, trend_time in upward_trends.items():
                 st.write(f"**Primeira Tendência de Alta Iniciada:** {ticker} em {trend_time}")
         else:
               st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
@@ -112,20 +112,21 @@ elif page == "Tabela":
     period = st.selectbox("Selecione o Período", period_options, index=5)
 
     data_frame_top_15_industry = load_data()
-
+    
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
-        if st.button("Atualizar"):
-            tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
-            try:
-                with st.spinner("Atualizando..."):
-                    data_frame_precos_intradiarios = update_data_frames(tickers_top_15, interval, period)
-                    st.success("Atualizado com sucesso!")
+        tickers_top_15 = data_frame_top_15_industry['CD_TICKER'].tolist()
+        try:
+            with st.spinner("Atualizando..."):
+                data_frame_precos_intradiarios, error_msg = consultar_precos_intradiarios_yf(tickers_top_15, interval, period)
+                if error_msg:
+                  st.error(error_msg)
+                if not data_frame_precos_intradiarios.empty:
+                  data_frame_precos_intradiarios.to_csv("src/precos_intradiarios_top_15.csv", index=False)
+                st.success("Atualizado com sucesso!")
 
-                data_frame_precos_intradiarios = pd.read_csv("src/precos_intradiarios_top_15.csv")
-                tickers_top_15 = data_frame_precos_intradiarios["symbol"].unique().tolist()
-
-            except Exception as e:
-                st.error(f"Ops, houve um erro ao atualizar: {e}")
+        except Exception as e:
+            st.error(f"Ops, houve um erro ao atualizar: {e}")
+        
     
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         st.subheader("Top 15 Empresas Listadas")
@@ -133,4 +134,5 @@ elif page == "Tabela":
 
     if isinstance(data_frame_precos_intradiarios, pd.DataFrame):
         st.subheader("Preços no período selecionado")
-        display_intraday_prices_table(data_frame_precos_intradiarios)
+        if  not data_frame_precos_intradiarios.empty:
+             display_intraday_prices_table(data_frame_precos_intradiarios)
