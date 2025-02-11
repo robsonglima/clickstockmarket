@@ -27,7 +27,7 @@ elif page == "Comparativo":
     data_frame_top_15_industry, _, _ = load_data()
     
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
-        tickers_list = data_frame_top_15_industry['CD_TICKER'].tolist()
+        tickers_list = data_frame_top_15_industry['TckrSymb'].tolist()
         selected_tickers = st.multiselect("Selecione os Tickers", tickers_list, key="dashboard_tickers")
     else:
         selected_tickers = []
