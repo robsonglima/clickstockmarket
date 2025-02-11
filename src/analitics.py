@@ -1,13 +1,18 @@
 
+import logging
+import os
+import io
+import requests
 import pandas as pd
 import yfinance as yf
+import io
 import requests
 import logging
-import time
 import os
 
 # Configure logging
 from datetime import date
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -18,8 +23,8 @@ OUTPUT_DIR = "src"
 
 # Create the output directory if it doesn't exist
 if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
 
+    os.makedirs(OUTPUT_DIR)
 OUTPUT_FILE_INDUSTRY = os.path.join(OUTPUT_DIR, "df_top_15_com_industry.csv")
 OUTPUT_FILE_INTRADAY = os.path.join(OUTPUT_DIR, "precos_intradiarios_top_15.csv")
 
@@ -68,6 +73,7 @@ def download_and_load_csv(url, delimiter, encoding, header, bad_lines_action, ca
     logging.error(f"Error downloading or parsing CSV:")
     return None
 
+
 def preencher_industry(df):
     """Fetches and adds 'Industry' information to the DataFrame."""
     industries = []
@@ -81,9 +87,13 @@ def preencher_industry(df):
         except Exception as e:
             logging.error(f"Error fetching industry for {ticker}: {e}")
             industries.append("Erro")
-    df['Industry'] = industries    
-    return df
 
+    
+
+
+
+    df['Industry'] = industries
+    return df
 
 def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
     """Fetches intraday price data for a list of tickers."""
@@ -97,35 +107,19 @@ def consultar_precos_intradiarios_yf(tickers, intervalo, periodo):
                 dados.columns = ["datetime", "open", "high", "low", "close", "volume"]
                 dados["symbol"] = ticker
 
-                dados = dados[["datetime", "symbol", "volume", "open", "high", "low", "close"]]
-                precos.append(dados)                
-                logging.info(f"Data fetched for {ticker}")
-            except Exception as e:
-                logging.error(f"Error fetching data for {ticker}: {e}")
-                logging.info(f"Pausing for 120 seconds due to potential rate limit for {ticker}...")
-                time.sleep(120)
+            dados = dados[["datetime", "symbol", "volume", "open", "high", "low", "close"]]
+            precos.append(dados)
+            
 
-                try:                    
-                    logging.info(f"Retrying to fetch data for {ticker} after pause")                    
-                    dados = yf.download(ticker, interval=intervalo, period=periodo, progress=False)                    
-                    dados = dados.reset_index()                    
-                    dados.columns = ["datetime", "open", "high", "low", "close", "volume"]                    
-                    dados["symbol"] = ticker                    
 
-                    dados = dados[["datetime", "symbol", "volume", "open", "high", "low", "close"]]                    
-                    precos.append(dados)
-
-                    logging.info(f"Data fetched for {ticker} on retry")                    
-                except Exception as e:
-                    logging.error(f"Error on retry fetch data for {ticker} after 120-second pause: {e}")
-                    logging.warning(f"Failed to fetch data for {ticker} after retry. Stopping processing other tickers.")
-                    return pd.DataFrame(), f"Failed to fetch data for {ticker} after retry."
-
+            logging.info(f"Data fetched for {ticker}")
         except Exception as e:
             logging.error(f"Error fetching data for {ticker}: {e}")
     return pd.concat(precos, ignore_index=True) if precos else pd.DataFrame(), ""
 
-def get_company_data(ticker: str, start_date: date, end_date: date):
+
+
+def get_company_data(ticker, start_date, end_date):
     """
     Gets company data from Yahoo Finance.
     Args:
@@ -147,6 +141,44 @@ def get_company_data(ticker: str, start_date: date, end_date: date):
         logging.error(f"Error fetching data for {ticker}: {e}")
         return {"profile": "N/A", "market": "N/A", "volume": "N/A", "history": pd.DataFrame()}
 
-def get_all_tickers(df: pd.DataFrame):    
-    tickers = df['CD_TICKER'].tolist()
-    return tickers
+if __name__ == "__main__":
+    # Main execution block
+    df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')
+
+    if df is not None:
+        #Incluindo .SA no TRacker para consultar no Yahoo Finance
+        df['TckrSymb'] = df['TckrSymb'] + '.SA'
+        df_filtrado_segmento = df[df['SgmtNm'].str.contains('CASH', na=False)]
+        df_top_15 = df_filtrado_segmento.nlargest(TOP_N, 'TradQty')
+
+        # adicionando mercado na tabela -  industry 
+        df_top_15_atualizado = preencher_industry(df_top_15)
+        print(df_top_15_atualizado)
+        #Save industry data
+        try:
+            df_top_15_atualizado.to_csv(OUTPUT_FILE_INDUSTRY, index=False, sep=";")
+            logging.info(f"{OUTPUT_FILE_INDUSTRY} saved successfully.")
+        except Exception as e:
+            logging.error(f"Error saving {OUTPUT_FILE_INDUSTRY}: {e}")
+
+        # atualziando intraday - precos
+        tickers_top_15 = df_top_15_atualizado['TckrSymb'].tolist()        
+        df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15)
+        
+        #adicionando info de mercado (industry) no df_precos_intradiarios
+        industry_mapping = df_top_15_atualizado.set_index('TckrSymb')['Industry'].to_dict()
+        df_precos_intradiarios['Industry'] = df_precos_intradiarios['symbol'].map(industry_mapping)
+        
+        #Adicionanod industry no df_precos
+        df_precos = df_precos_intradiarios
+
+
+        print("df_precos_intradiarios")
+        print(df_precos_intradiarios.head())        
+
+        #Salvar o intraday data - mensage somente no log
+        try:
+            df_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)
+            logging.info(f"{OUTPUT_FILE_INTRADAY} saved successfully.")
+        except Exception as e:
+            logging.error(f"Error saving {OUTPUT_FILE_INTRADAY}: {e}")
