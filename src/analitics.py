@@ -181,16 +181,20 @@ def load_data(interval = "1d", period="1y"):
     return data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15
         
 
-                    
-                   
-                        if ticker not in downward_trends:   
-                            downward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
-                            break 
-                    # Check for upward trend
-                    elif all(data[j] < data[j+1] for j in range(i - window_size + 1, i)):
-                        if ticker not in upward_trends:
-                            upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
-                            break
+    window_size = 3
+    for ticker in tickers:
+        ticker_data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+        if not ticker_data.empty:
+            data = ticker_data['Close']
+            for i in range(window_size, len(data)):
+                if all(data[j] > data[j+1] for j in range(i - window_size + 1, i)):
+                    if ticker not in downward_trends:   
+                        downward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                        break
+                elif all(data[j] < data[j+1] for j in range(i - window_size + 1, i)):
+                    if ticker not in upward_trends:
+                        upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                        break
     
 
     
