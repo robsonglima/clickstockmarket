@@ -19,8 +19,8 @@ OUTPUT_DIR = "src"
 
 # Create the output directory if it doesn't exist
 if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
 
+    os.makedirs(OUTPUT_DIR)
 OUTPUT_FILE_INDUSTRY = os.path.join(OUTPUT_DIR, "df_top_15_com_industry.csv")
 OUTPUT_FILE_INTRADAY = os.path.join(OUTPUT_DIR, "precos_intradiarios_top_15.csv")
 
@@ -107,44 +107,90 @@ def get_company_data(ticker, start_date, end_date):
         logging.error(f"Error fetching data for {ticker}: {e}")
         return {"profile": "N/A", "market": "N/A", "volume": "N/A", "history": pd.DataFrame()}
 
-if __name__ == "__main__":
-    # Main execution block
-    df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')
 
-    if df is not None:
-        #Incluindo .SA no TRacker para consultar no Yahoo Finance
-        df['TckrSymb'] = df['TckrSymb'] + '.SA'
-        df_filtrado_segmento = df[df['SgmtNm'].str.contains('CASH', na=False)]
-        df_top_15 = df_filtrado_segmento.nlargest(TOP_N, 'TradQty')
+def analyze_trend_initiation(tickers, start_date, end_date):
+    """
+    Analyzes the initiation of upward and downward trends for a list of stock tickers.
 
-        # adicionando mercado na tabela -  industry 
-        df_top_15_atualizado = preencher_industry(df_top_15)
-        print(df_top_15_atualizado)
-        #Save industry data
+    Args:
+        tickers (list): List of stock tickers.
+        start_date (date): Start date for the analysis.
+        end_date (date): End date for the analysis.
+
+    Returns:
+        tuple: Two dictionaries, one for downward trends and one for upward trends.
+               Each dictionary contains ticker symbols as keys and the trend initiation
+               time as values.
+    """
+    downward_trends = {}
+    upward_trends = {}
+    for ticker in tickers:
         try:
-            df_top_15_atualizado.to_csv(OUTPUT_FILE_INDUSTRY, index=False, sep=";")
-            logging.info(f"{OUTPUT_FILE_INDUSTRY} saved successfully.")
+            ticker_data = yf.download(ticker, start=start_date, end=end_date)
+            if not ticker_data.empty:
+                # Implement logic to detect trend initiation
+                # Example: check for a series of consecutive decreases or increases
+                data = ticker_data['Close']
+                for i in range(1, min(len(data), 4)): # Iterate only the first 3 lines
+                    if data[i] < data[i - 1]:
+                        # Check for a series of decreases to consider it a trend
+                        consecutive_decreases = all(data[j] < data[j-1] for j in range(i, max(0, i-3),-1))
+
+                        if consecutive_decreases and ticker not in downward_trends:
+                            downward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                            break # Stop when one trend is found
+                    elif data[i] > data[i - 1]:
+                        # Check for a series of increases to consider it a trend
+                        consecutive_increases = all(data[j] > data[j-1] for j in range(i, max(0, i-3),-1))
+                        if consecutive_increases and ticker not in upward_trends:
+                            upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                            break # Stop when one trend is found
         except Exception as e:
-            logging.error(f"Error saving {OUTPUT_FILE_INDUSTRY}: {e}")
+            logging.error(f"Error analyzing trends for {ticker}: {e}")
+    return downward_trends, upward_trends
 
-        # atualziando intraday - precos
-        tickers_top_15 = df_top_15_atualizado['TckrSymb'].tolist()        
-        df_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15)
+
+def load_data(interval = "1d", period="1y"):
+    """
+    Load the data
+    """
+    logging.info(f"Loading data with interval {interval} and period {period}")
+
+    try:
+        data_frame_top_15_industry = pd.read_csv("src/df_top_15_com_industry.csv", sep=";")
+        data_frame_precos_intradiarios = pd.read_csv("src/precos_intradiarios_top_15.csv")
+    except Exception as e:
+        logging.error(f"Error loading data: {e}")
+        df = download_and_load_csv(GITHUB_CSV_URL, ';', CSV_ENCODING, 1, 'skip')
+
+        if df is not None:
+            df['TckrSymb'] = df['TckrSymb'] + '.SA'
+            df_filtrado_segmento = df[df['SgmtNm'].str.contains('CASH', na=False)]
+            data_frame_top_15_industry = df_filtrado_segmento.nlargest(TOP_N, 'TradQty')
+            data_frame_top_15_industry = preencher_industry(data_frame_top_15_industry)
+            data_frame_top_15_industry.to_csv(OUTPUT_FILE_INDUSTRY, index=False, sep=";")
+    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()        
+    data_frame_precos_intradiarios = consultar_precos_intradiarios_yf(tickers_top_15,interval, period)
+    
+    industry_mapping = data_frame_top_15_industry.set_index('TckrSymb')['Industry'].to_dict()
+    data_frame_precos_intradiarios['Industry'] = data_frame_precos_intradiarios['symbol'].map(industry_mapping)
+    data_frame_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)
+    logging.info("Data load with sucefull.")
+    tickers_top_15 = data_frame_top_15_industry['TckrSymb'].tolist()
+
+    return data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15
         
-        #adicionando info de mercado (industry) no df_precos_intradiarios
-        industry_mapping = df_top_15_atualizado.set_index('TckrSymb')['Industry'].to_dict()
-        df_precos_intradiarios['Industry'] = df_precos_intradiarios['symbol'].map(industry_mapping)
-        
-        #Adicionanod industry no df_precos
-        df_precos = df_precos_intradiarios
 
+                    
+                   
+                        if ticker not in downward_trends:   
+                            downward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                            break 
+                    # Check for upward trend
+                    elif all(data[j] < data[j+1] for j in range(i - window_size + 1, i)):
+                        if ticker not in upward_trends:
+                            upward_trends[ticker] = data.index[i].strftime('%Y-%m-%d')
+                            break
+    
 
-        print("df_precos_intradiarios")
-        print(df_precos_intradiarios.head())        
-
-        #Salvar o intraday data - mensage somente no log
-        try:
-            df_precos_intradiarios.to_csv(OUTPUT_FILE_INTRADAY, index=False)
-            logging.info(f"{OUTPUT_FILE_INTRADAY} saved successfully.")
-        except Exception as e:
-            logging.error(f"Error saving {OUTPUT_FILE_INTRADAY}: {e}")
+    

@@ -1,17 +1,27 @@
 import streamlit as st
-from app import load_data, run_app, display_top_15_table, display_intraday_prices_table, update_data_frames, show_comparative_graph, analyze_trend_initiation, show_company_info
-
-from analitics import get_company_data
+from app import *
+from analitics import analyze_trend_initiation, get_company_data
 import pandas as pd
 from datetime import date
-
+from app import display_intraday_prices_table, display_top_15_table, load_data
+from app import show_company_info, show_comparative_graph, update_data_frames
 
 st.sidebar.title("Menu")
-page = st.sidebar.radio("Ir para", ["Principal", "Comparativo", "Gráfico", "Tabela"])
 
-if page == "Principal":
-    st.title("Análise de Ações") 
-    st.markdown("""
+def load_data_no_tickers():
+    data_frame_top_15_industry, data_frame_precos_intradiarios, _ = load_data('1d', '1y')
+    return data_frame_top_15_industry, data_frame_precos_intradiarios
+    
+page = st.sidebar.radio("Navegar para:", ["Principal", "Comparativo", "Gráfico", "Tabela"])
+
+
+end_date = date.today()
+
+if page == "Principal":    
+
+    st.title("Análise de Ações")
+    st.markdown(
+        """
             Bem-vindo ao Análise de Ações!
 
             Descubra as correlações entre ações e identifique padrões que podem indicar boas oportunidades de investimento. Nossa plataforma permite que você analise o comportamento do mercado em diferentes períodos de tempo, ajudando você a entender como os ativos se movem juntos e quais sinais podem antecipar tendências.
@@ -19,9 +29,7 @@ if page == "Principal":
             Use o menu para explorar os dados e melhorar suas estratégias.
 
         """
-        )
-    if st.button("Recarregar Principal"):
-        st.rerun()    
+    )
 elif page == "Comparativo":
     st.title("Comparativo")
     data_frame_top_15_industry, _, _ = load_data()
@@ -37,7 +45,10 @@ elif page == "Comparativo":
     end_date = st.date_input("Data Final", date.today())
 
     company_data_list = []
-    if selected_tickers :
+
+    if selected_tickers:
+        show_comparative_graph(selected_tickers, start_date, end_date)
+
         for ticker in selected_tickers:
           company_data = get_company_data(ticker, start_date, end_date)
           company_data_list.append(company_data)
@@ -55,25 +66,10 @@ elif page == "Comparativo":
         if upward_trends:
             for ticker, trend_time in upward_trends.items():
                 st.write(f"**Primeira Tendência de Alta Iniciada:** {ticker} em {trend_time}")
-
-    if selected_tickers:
-        for ticker in selected_tickers:
-            company_data = get_company_data(ticker, start_date, end_date)
-            company_data_list.append(company_data)
-        for ticker, company_data in zip(selected_tickers, company_data_list):
-            show_company_info(company_data, ticker)
-    
-    
-        downward_trends, upward_trends = analyze_trend_initiation(selected_tickers, start_date, end_date)
+        else:
+            st.write(f"**Primeira Tendência de Alta Iniciada:** Sem tendências detectadas.")
         
-        if downward_trends:
-            for ticker, time in downward_trends.items():
-                st.write(f"**Primeira Tendência de Baixa Iniciada:** {ticker} às {time.strftime('%d/%m/%Y %H:%M')}")
-
-        if upward_trends:
-            for ticker, time in upward_trends.items():
-                st.write(f"**Primeira Tendência de Alta Iniciada:** {ticker} às {time.strftime('%d/%m/%Y %H:%M')}")
-
+    
 elif page == "Gráfico":
     st.title("Análise do Gráfico")
     data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
@@ -102,7 +98,7 @@ elif page == "Tabela":
 
             except Exception as e:
                 st.error(f"Ops, houve um erro ao atualizar: {e}")
-
+    
     if isinstance(data_frame_top_15_industry, pd.DataFrame):
         st.subheader("Top 15 Empresas Listadas")
         display_top_15_table(data_frame_top_15_industry)
