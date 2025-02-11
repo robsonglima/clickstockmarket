@@ -16,12 +16,11 @@ if page == "Principal":
 
             Descubra as correlações entre ações e identifique padrões que podem indicar boas oportunidades de investimento. Nossa plataforma permite que você analise o comportamento do mercado em diferentes períodos de tempo, ajudando você a entender como os ativos se movem juntos e quais sinais podem antecipar tendências.
 
-            Use a barra lateral para explorar os dados e melhorar suas estratégias.
+            Use o menu para explorar os dados e melhorar suas estratégias.
 
         """
         )
     if st.button("Recarregar Principal"):
-        
         st.rerun()    
 elif page == "Comparativo":
     st.title("Comparativo")
@@ -66,12 +65,10 @@ elif page == "Comparativo":
     
     
         downward_trends, upward_trends = analyze_trend_initiation(selected_tickers, start_date, end_date)
-
-        if downward_trend:
-              for ticker, trend_time in downward_trends.items():
-                st.write(f"**Primeira Tendência de Baixa Iniciada:** {ticker} em {trend_time}")
-        else:
-                st.write(f"**Primeira Tendência de Baixa Iniciada:** Sem tendências detectadas.")
+        
+        if downward_trends:
+            for ticker, time in downward_trends.items():
+                st.write(f"**Primeira Tendência de Baixa Iniciada:** {ticker} às {time.strftime('%d/%m/%Y %H:%M')}")
 
         if upward_trends:
             for ticker, time in upward_trends.items():
@@ -85,10 +82,10 @@ elif page == "Gráfico":
 elif page == "Tabela":
     st.title("Tabelas de Dados")
 
-    interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d"]
-    period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max",]
-    interval = st.selectbox("Selecione o Intervalo", interval_options, index=8)
-    period = st.selectbox("Selecione o Período", period_options, index=5)
+    interval_options = ["1min", "2min", "5min", "15min", "30min", "60min", "90min", "1h", "1d", "5d", "1wk", "1mo", "3mo"]
+    period_options = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+    interval = st.selectbox("Selecione Intervalo", interval_options, index=8)
+    period = st.selectbox("Selecione Periodo", period_options, index=5)
 
     data_frame_top_15_industry, data_frame_precos_intradiarios, tickers_top_15 = load_data()
 
